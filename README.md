@@ -1,3 +1,5 @@
 # terraformUpskill
 PGS upskill program
-https://trello-attachments.s3.amazonaws.com/5c556ee530e16a78c7e4087d/712x1152/5abd7378a63d52cdedfb86795fb12684/AWS.jpg
+
+https://trello.com/1/cards/5e25becd3165e1581f2fb7ab/attachments/5e30055c97c93c5710104eae/previews/download?backingUrl=https%3A%2F%2Ftrello-attachments.s3.amazonaws.com%2F5e25becd3165e1581f2fb7ab%2F712x1152%2F32468cab569fdc9408123baa473f4216%2Fimage.png
+
