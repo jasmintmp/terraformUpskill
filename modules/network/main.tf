@@ -1,15 +1,22 @@
 # MODUL network
 
-# variable "env_name" {
-#   vpc_id = "A string var"
-# }
+variable "cidr_block_vpc" {
+}
+
+variable "cidr_block_sub" {
+}
+
+variable "az1" {
+}
+variable "az2" {
+}
 
 
 # -------------- VPC ----------------------
 # Your VPC comes with a default security group.
 #------------------------------------------
 resource "aws_vpc" "akrawiec_vpc" {
-  cidr_block       = "10.0.0.0/16"
+  cidr_block      = var.cidr_block_vpc
   instance_tenancy = "default"
 
   tags = {
@@ -23,8 +30,8 @@ resource "aws_vpc" "akrawiec_vpc" {
 #---------------------------------------------
 resource "aws_subnet" "akrawiec_subnet_1" {
   vpc_id     = aws_vpc.akrawiec_vpc.id
-  cidr_block = "10.0.0.0/24"
-  availability_zone = "us-west-2a"
+  cidr_block = var.cidr_block_sub
+  availability_zone = var.az1
   tags = {
     Name = "akrawiec_subnet_1"
      Owner = "akrawiec"
@@ -36,8 +43,8 @@ resource "aws_subnet" "akrawiec_subnet_1" {
 #---------------------------------------------
 resource "aws_subnet" "akrawiec_subnet_2" {
   vpc_id     = aws_vpc.akrawiec_vpc.id
-  cidr_block = "10.0.1.0/24"
-  availability_zone = "us-west-2c"
+  cidr_block = var.cidr_block_sub
+  availability_zone = var.az2
 
   tags = {
     Name = "akrawiec_subnet_2"

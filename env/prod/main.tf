@@ -1,4 +1,4 @@
-#  ROOT
+#  ROOT 
 #   ├── modules
 #   │   └── network
 #   │     └── main.tf
@@ -6,17 +6,15 @@
 #   │     └── main.tf
 #   │
 #   ├── environments
-#   │   ├── dev -------------------< 
-#   │   │ └── main.tf
-#   │   │ └── variables.tf
-#   │   ├── production
-#   │   │ └── main.tf
-#   │   │ └── variables.tf
-#   │   └── staging
-#   │     └── main.tf
-#   │     └── variables.tf
-#   │
-#─> └── main.tf 
+#       ├── dev  
+#       │ └── main.tf
+#       │ └── variables.tf
+#       ├── prod
+#       │ └── main.tf
+#       │ └── variables.tf
+#       └── staging
+#         └── main.tf
+#         └── variables.tf
 
 # to the file add ex cid etc..
 variable "region" {
