@@ -9,6 +9,7 @@
 #       ├── dev  
 #       │ └── main.tf
 #       │ └── variables.tf
+#       │ └── outputs.tf
 #       ├── prod
 #       │ └── main.tf
 #       │ └── variables.tf
@@ -48,6 +49,9 @@ terraform {
 
 
 #------------- Modules ----------
+# subnets 10.0.0.x  10.0.1.x 
+#--------------------------------
+
 module "network" {
   source = "./../../modules/network"
   cidr_block_vpc = "10.0.0.0/16"
@@ -63,16 +67,7 @@ module "components" {
 
 
 	
-#--------- DataSource ------------------------
-#  Data from:  provider, HTTP url, ...  , filters
-#---------------------------------------------
 
-data "aws_vpcs" "vpc_list" {
-}
-
-output "vpc_list" {
-  value = "${data.aws_vpcs.vpc_list.ids}"
-}
 
 
 

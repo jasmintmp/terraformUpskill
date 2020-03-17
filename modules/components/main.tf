@@ -28,12 +28,14 @@ resource "aws_s3_bucket" "my_bucket" {
 # }
 
 # ---------- EC2 	
-#Create EC2 instance with AMI Image (public image)
-#Amazon Machine Images (AMI) EC2
+# Virtual Server
+# Create EC2 instance with AMI Image (public image)
+# Amazon Machine Images (AMI) EC2 for region 
+# Comunity Canonical, Ubuntu, 18.04 LTS,
 # ----------
 resource "aws_instance" "myEc2" {
   ami           = "ami-06d51e91cea0dac8d"
-  instance_type = "t3.micro"
+  instance_type = "t2.micro"
   subnet_id     = var.subnetId
   tags = {
     Name = "akrawiec-EC2"
