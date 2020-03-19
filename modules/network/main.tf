@@ -58,6 +58,7 @@ resource "aws_subnet" "akrawiec_subnet_pub_2c" {
 
 # -------------- Security Group -----------
 # Security Group - instance firewall 
+# Statefull - no need return trip
 # -----------------------------------------
 resource "aws_security_group" "akrawiec_sg_pub"{
   name = "akrawiec_sg_pub"
@@ -72,7 +73,17 @@ resource "aws_security_group" "akrawiec_sg_pub"{
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
-   # allow egress of all ports
+
+  # allow ingress of port 80
+  ingress {
+    description = "HTTP from VPC"
+    from_port   = 80
+    to_port     = 80
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # allow egress of all ports
   egress {
     from_port   = 0
     to_port     = 0
