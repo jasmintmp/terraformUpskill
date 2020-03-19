@@ -18,8 +18,6 @@
 #         └── variables.tf
 
 
-
-
 # ---------- Provider ----------
 # Getting Started
 # This is introduction script for terraform with basic commands.
@@ -28,9 +26,6 @@ provider "aws" {
   profile = "default"
   region  = var.region
 }
-
-
-
 #----------- Backend Configuration --------------
 # First S3 must be created from panel, 
 # Configuration is moved to remote state [init];  destroy:  remove .terraform/ 
@@ -46,33 +41,18 @@ terraform {
   }
 }
 
-
-
 #------------- Modules ----------
-# subnets 10.0.0.x  10.0.1.x 
+# subnets 10.0.a.x  10.0.b.x 
 #--------------------------------
-
 module "network" {
   source = "./../../modules/network"
-  cidr_block_vpc = "10.0.0.0/16"
-  cidr_block_sub = "10.0.0.0/24"
-  az1 = "us-west-2a"
-  az2 = "us-west-2c"
+  vpc_cidr = "10.0.0.0/16"
+  cidr_subnet_list = ["10.0.101.0/24","10.0.102.0/24"]
+  availability_zone_names = ["us-west-2a","us-west-2c"]
 }
 
 module "components" {
   source = "./../../modules/components"
   subnetId = module.network.subnetId
+  securityGroup = module.network.securityGroup
 }
-
-
-	
-
-
-
-
-
-
-
-
-
