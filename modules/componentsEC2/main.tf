@@ -1,10 +1,10 @@
 # MODUL components
 
-variable "subnetId" {
+variable "EC2subnetId" {
    description = "subnetId"
 }
 
-variable "securityGroup" {
+variable "EC2securityGroup" {
    description = "securityGroup"
 }
 
@@ -44,8 +44,8 @@ resource "aws_key_pair" "akrawiec_public_key" {
 resource "aws_instance" "akrawiec_EC2_1" {
   ami           = "ami-06d51e91cea0dac8d"
   instance_type = "t2.micro"
-  subnet_id     = var.subnetId
-  vpc_security_group_ids = [var.securityGroup]
+  subnet_id     = var.EC2subnetId
+  vpc_security_group_ids = [var.EC2securityGroup]
   key_name = aws_key_pair.akrawiec_public_key.key_name
 
   tags = {

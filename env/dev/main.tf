@@ -51,8 +51,14 @@ module "network" {
   availability_zone_names = ["us-west-2a","us-west-2c"]
 }
 
-module "components" {
-  source = "./../../modules/components"
-  subnetId = module.network.subnetId
-  securityGroup = module.network.securityGroup
+module "componentsEC2" {
+  source = "./../../modules/componentsEC2"
+  EC2subnetId = module.network.EC2subnetId
+  EC2securityGroup = module.network.EC2securityGroup
+}
+
+module "componentsRDS" {
+  source = "./../../modules/componentsRDS"
+  RDSsubnetGroupId = module.network.RDSsubnetGroupId
+  RDSsecurityGroupId = module.network.RDSsecurityGroupId
 }

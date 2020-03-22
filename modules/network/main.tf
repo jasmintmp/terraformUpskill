@@ -24,7 +24,9 @@ resource "aws_vpc" "akrawiec_vpc" {
     Terraform = "true"
   }
 }
-
+# --------------------------------------------------------------------------------------------
+# EC2 - preparation, public Internet access 
+# --------------------------------------------------------------------------------------------
 # -------------- Subnet ----------------------
 #  Subnet_1 251 IP 2a AZ
 #---------------------------------------------
@@ -245,12 +247,111 @@ resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub2" {
 }
 
 #---------- OutPut  -----------
-# 
+# EC2
 #-------------------------------
-output "subnetId" {
+output "EC2subnetId" {
   value = aws_subnet.akrawiec_subnet_pub_2a.id
 }
-output "securityGroup" {
+output "EC2securityGroup" {
   value = aws_security_group.akrawiec_sg_pub.id
 }
 
+# --------------------------------------------------------------------------------------------
+# RDS - preparation, private subnet.
+# --------------------------------------------------------------------------------------------
+#------------------------------- 
+# 1 Creating two Private Subnets 
+#-------------------------------
+#  Subnet_3 2a
+#-------------------------
+resource "aws_subnet" "akrawiec_subnet_prv_2a" {
+  vpc_id     = aws_vpc.akrawiec_vpc.id  
+  cidr_block = "10.0.1.0/24"
+
+  availability_zone = "us-west-2a"
+  tags = {
+    Name = "akrawiec_subnet_prv_2a"
+     Owner = "akrawiec"
+  }
+}
+#-------------------------
+#  Subnet_4 2c
+#-------------------------
+resource "aws_subnet" "akrawiec_subnet_prv_2c" {
+  vpc_id     = aws_vpc.akrawiec_vpc.id
+  cidr_block = "10.0.2.0/24"
+  availability_zone = "us-west-2c"
+
+  tags = {
+    Name = "akrawiec_subnet_prv_2c"
+     Owner = "akrawiec"
+  }
+}
+
+# -------------- DB Subnet  Group-------------
+# 2 Crate DB Subnets Group
+# -----------------------------------------
+resource "aws_db_subnet_group" "akrawiec_subnets_group" {
+  name       = "akrawiec_subnets_group"
+  subnet_ids = [aws_subnet.akrawiec_subnet_prv_2a.id, aws_subnet.akrawiec_subnet_prv_2c.id]
+
+  tags = {
+    Name = "akrawiec DB subnet group"
+  }
+}
+
+# -------------- RDS Security Group -----------
+# 3 Crate PRIVATE Security Group 
+# RDS with Source EC2(SecGroup) -> RDS allowed
+# -----------------------------------------
+resource "aws_security_group" "akrawiec_sg_prv"{
+  name = "akrawiec_sg_prv"
+  description = "Allow RDS"
+  vpc_id = aws_vpc.akrawiec_vpc.id
+
+  # allow ingress of port 1433
+  ingress {
+    description = "Source EC2 sg to RDS"
+    from_port   = 1433
+    to_port     = 1433
+    protocol    = "tcp"
+    security_groups = [aws_security_group.akrawiec_sg_pub.id]
+  }
+
+  # allow ingress ssh
+  ingress {
+        from_port = 22
+        to_port = 22
+        protocol = "tcp"
+        cidr_blocks = ["0.0.0.0/0"]
+  }
+ # allow egress of all ports
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  #  tags {
+  #       Name = "DBServerSG"
+  #       Terraform = true
+  #   }
+
+}
+
+#---------- OutPut  -----------
+# RDS
+#-------------------------------
+output "RDSsubnetGroupId" {
+  value = aws_db_subnet_group.akrawiec_subnets_group.id
+}
+output "RDSsecurityGroupId" {
+  value = aws_security_group.akrawiec_sg_prv.id
+}
+
+# module "mssql_security_group" {
+#   source = "terraform-aws-modules/security-group/aws//modules/mssql"
+
+#   # omitted...
+# }

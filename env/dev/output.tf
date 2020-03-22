@@ -9,5 +9,5 @@ output "vpc_list" {
 }
 
 output "publicIp" {
-  value = module.components.publicIpEc1
+  value = module.componentsEC2.publicIpEc1
 }
