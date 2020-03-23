@@ -1,19 +1,25 @@
-# terraformUpskill
+# TerraformUpskill
 PGS upskill program
 
 https://trello.com/1/cards/5e25becd3165e1581f2fb7ab/attachments/5e30055c97c93c5710104eae/previews/download?backingUrl=https%3A%2F%2Ftrello-attachments.s3.amazonaws.com%2F5e25becd3165e1581f2fb7ab%2F712x1152%2F32468cab569fdc9408123baa473f4216%2Fimage.png
 
-
 # VPC 
-VPC with Internet Access with two or more EC2 with separate subnet and security group
+VPC with Internet Access with  
   Internet Gataway
   Subnets
   Subnets Group for RDS
+  Route Table
+  
 # Security  
 	NACL
-	Security Group,
-	Route Table + itg Route.
-
+	Public Security Group EC2 (each)
+	Privat Security Group RDS (Inboud Rule for RDS <- EC2)
+	Route Table + IGW Route
+	
+# Components
+  Multiple EC2 with separate subnet and security group
+  RDS with replication in differend AZ
+  
 # Tests
   SSH authentication with RSA Public Key on AWS
   Putty connection to EC2 Linux Ubuntu:
@@ -25,5 +31,3 @@ VPC with Internet Access with two or more EC2 with separate subnet and security 
 # Issue diagnostic / option    
     - AWS logs from VPC vpcflowlogs
     - Linux EC2 var/log/cloud-init.log
-
- 
