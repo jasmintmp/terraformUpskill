@@ -62,7 +62,10 @@ module "componentsEC2" {
 
 module "componentsRDS" {
   source = "./../../modules/componentsRDS"
+  createInstance = true
+  createReplica = true
   RDSsubnetGroupId = module.network.RDSsubnetGroupId
   RDSsecurityGroupId1 = module.network.RDSsecurityGroupId1
   RDSsecurityGroupId2 = module.network.RDSsecurityGroupId2
+  #tags Environment = "dev"
 }

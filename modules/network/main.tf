@@ -305,9 +305,18 @@ resource "aws_security_group" "akrawiec_sg_prv1"{
 
   # allow ingress of port 1433
   ingress {
-    description = "Source EC2 sg to RDS"
+    description = "Source EC2 sg to RDS MSSQL"
     from_port   = 1433
     to_port     = 1433
+    protocol    = "tcp"
+    security_groups = [aws_security_group.akrawiec_sg_pub.id]
+  }
+
+  # allow ingress of port 3306
+  ingress {
+    description = "Source EC2 sg to RDS MySQL"
+    from_port   = 3306
+    to_port     = 3306
     protocol    = "tcp"
     security_groups = [aws_security_group.akrawiec_sg_pub.id]
   }
