@@ -3,13 +3,18 @@ variable "vpc_cidr" {
 }
 variable "cidr_subnet_list" {
     type = list(string)
-
 }
+variable "cidr_subnet_list_prv" {
+    type = list(string)
+}
+
 variable "availability_zone_names" {
   type = list(string)
   default =["us-west-2"]
 }
-
+locals{
+  zero-address = "0.0.0.0/0"
+}
 # -------------- VPC ----------------------
 # VPC comes with a default security group, unless it'll be provided.
 # VPC restriction on profile = 1
@@ -28,7 +33,7 @@ resource "aws_vpc" "akrawiec_vpc" {
 # EC2 - preparation, public Internet access 
 # --------------------------------------------------------------------------------------------
 # -------------- Subnet ----------------------
-#  Subnet_1 251 IP 2a AZ
+#  Subnet_1
 #---------------------------------------------
 resource "aws_subnet" "akrawiec_subnet_pub_2a" {
   vpc_id     = aws_vpc.akrawiec_vpc.id
@@ -43,7 +48,7 @@ resource "aws_subnet" "akrawiec_subnet_pub_2a" {
 }
 
 # -------------- Subnet ----------------------
-#  Subnet_2 251 IP 2c AZ
+#  Subnet_2
 #---------------------------------------------
 resource "aws_subnet" "akrawiec_subnet_pub_2c" {
   vpc_id     = aws_vpc.akrawiec_vpc.id
@@ -73,7 +78,7 @@ resource "aws_security_group" "akrawiec_sg_pub"{
     from_port   = 22
     to_port     = 22
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [local.zero-address]
   }
 
   # allow ingress of port 80
@@ -82,7 +87,7 @@ resource "aws_security_group" "akrawiec_sg_pub"{
     from_port   = 80
     to_port     = 80
     protocol    = "tcp"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [local.zero-address]
   }
 
   # allow egress of all ports
@@ -90,7 +95,7 @@ resource "aws_security_group" "akrawiec_sg_pub"{
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [local.zero-address]
   }
 
  tags = {
@@ -110,7 +115,7 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
     protocol   = "tcp"
     rule_no    = 100
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = local.zero-address
     from_port  = 22
     to_port    = 22
   }
@@ -120,7 +125,7 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
     protocol   = "tcp"
     rule_no    = 200
     action     = "allow"
-    cidr_block = "0.0.0.0/0" 
+    cidr_block = local.zero-address 
     from_port  = 80
     to_port    = 80
   }
@@ -130,7 +135,7 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
     protocol   = "tcp"
     rule_no    = 300
     action     = "allow"
-    cidr_block =  "0.0.0.0/0"
+    cidr_block =  local.zero-address
     from_port  = 1024
     to_port    = 65535
   }
@@ -140,7 +145,7 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
     protocol   = "tcp"
     rule_no    = 400
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = local.zero-address
     from_port  = 443
     to_port    = 443
   }
@@ -151,7 +156,7 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
     protocol   = "tcp"
     rule_no    = 100
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = local.zero-address
     from_port  = 22 
     to_port    = 22
   }
@@ -161,7 +166,7 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
     protocol   = "tcp"
     rule_no    = 200
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = local.zero-address
     from_port  = 80  
     to_port    = 80 
   }
@@ -171,7 +176,7 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
     protocol   = "tcp"
     rule_no    = 300
     action     = "allow"
-    cidr_block =  "0.0.0.0/0"
+    cidr_block =  local.zero-address
     from_port  = 1024
     to_port    = 65535
   }
@@ -181,7 +186,7 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
     protocol   = "tcp"
     rule_no    = 400
     action     = "allow"
-    cidr_block = "0.0.0.0/0"
+    cidr_block = local.zero-address
     from_port  = 443
     to_port    = 443
   }
@@ -212,7 +217,7 @@ resource "aws_route_table" "akrawiec_VPC_route_table" {
   vpc_id = aws_vpc.akrawiec_vpc.id
   
   route {
-    cidr_block = "0.0.0.0/0"
+    cidr_block = local.zero-address
     gateway_id = aws_internet_gateway.akrawiec_vpc_gw.id
   }
 #check if exaggerated
@@ -230,7 +235,7 @@ resource "aws_route_table" "akrawiec_VPC_route_table" {
 # --------------------------------------------
 resource "aws_route" "akrawiec_VPC_internet_access" {
   route_table_id         = aws_route_table.akrawiec_VPC_route_table.id
-  destination_cidr_block = "0.0.0.0/0"
+  destination_cidr_block = local.zero-address
   gateway_id             = aws_internet_gateway.akrawiec_vpc_gw.id
 } 
 
@@ -246,16 +251,6 @@ resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub2" {
   route_table_id = aws_route_table.akrawiec_VPC_route_table.id
 }
 
-#---------- OutPut  -----------
-# EC2
-#-------------------------------
-output "EC2subnetId" {
-  value = aws_subnet.akrawiec_subnet_pub_2a.id
-}
-output "EC2securityGroup" {
-  value = aws_security_group.akrawiec_sg_pub.id
-}
-
 # --------------------------------------------------------------------------------------------
 # RDS - preparation, private subnet.
 # --------------------------------------------------------------------------------------------
@@ -266,9 +261,8 @@ output "EC2securityGroup" {
 #-------------------------
 resource "aws_subnet" "akrawiec_subnet_prv_2a" {
   vpc_id     = aws_vpc.akrawiec_vpc.id  
-  cidr_block = "10.0.1.0/24"
-
-  availability_zone = "us-west-2a"
+  cidr_block = var.cidr_subnet_list_prv[0]
+  availability_zone = var.availability_zone_names[0]
   tags = {
     Name = "akrawiec_subnet_prv_2a"
      Owner = "akrawiec"
@@ -279,16 +273,16 @@ resource "aws_subnet" "akrawiec_subnet_prv_2a" {
 #-------------------------
 resource "aws_subnet" "akrawiec_subnet_prv_2c" {
   vpc_id     = aws_vpc.akrawiec_vpc.id
-  cidr_block = "10.0.2.0/24"
-  availability_zone = "us-west-2c"
-
+  cidr_block = var.cidr_subnet_list_prv[1]
+  availability_zone = var.availability_zone_names[1]
   tags = {
     Name = "akrawiec_subnet_prv_2c"
      Owner = "akrawiec"
+
   }
 }
 
-# -------------- DB Subnet  Group-------------
+# -------------- DB Subnet's Group --------
 # 2 Crate DB Subnets Group
 # -----------------------------------------
 resource "aws_db_subnet_group" "akrawiec_subnets_group" {
@@ -301,11 +295,11 @@ resource "aws_db_subnet_group" "akrawiec_subnets_group" {
 }
 
 # -------------- RDS Security Group -----------
-# 3 Crate PRIVATE Security Group 
+# 3.1 Crate PRIVATE Security Group 
 # RDS with Source EC2(SecGroup) -> RDS allowed
 # -----------------------------------------
-resource "aws_security_group" "akrawiec_sg_prv"{
-  name = "akrawiec_sg_prv"
+resource "aws_security_group" "akrawiec_sg_prv1"{
+  name = "akrawiec_sg_prv1"
   description = "Allow RDS"
   vpc_id = aws_vpc.akrawiec_vpc.id
 
@@ -323,14 +317,51 @@ resource "aws_security_group" "akrawiec_sg_prv"{
         from_port = 22
         to_port = 22
         protocol = "tcp"
-        cidr_blocks = ["0.0.0.0/0"]
+        cidr_blocks = [local.zero-address]
   }
  # allow egress of all ports
   egress {
     from_port   = 0
     to_port     = 0
     protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    cidr_blocks = [local.zero-address]
+  }
+
+  #  tags {
+  #       Name = "DBServerSG"
+  #       Terraform = true
+  #   }
+
+}
+
+# 3.2 Crate PRIVATE Security Group 
+resource "aws_security_group" "akrawiec_sg_prv2"{
+  name = "akrawiec_sg_prv2"
+  description = "Allow RDS"
+  vpc_id = aws_vpc.akrawiec_vpc.id
+
+  # allow ingress of port 1433
+  ingress {
+    description = "Source EC2 sg to RDS"
+    from_port   = 1433
+    to_port     = 1433
+    protocol    = "tcp"
+    security_groups = [aws_security_group.akrawiec_sg_pub.id]
+  }
+
+  # allow ingress ssh
+  ingress {
+        from_port = 22
+        to_port = 22
+        protocol = "tcp"
+        cidr_blocks = [local.zero-address]
+  }
+ # allow egress of all ports
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = [local.zero-address]
   }
 
   #  tags {
@@ -341,15 +372,26 @@ resource "aws_security_group" "akrawiec_sg_prv"{
 }
 
 #---------- OutPut  -----------
-# RDS
+# 
 #-------------------------------
+output "EC2subnetId1" {
+  value = aws_subnet.akrawiec_subnet_pub_2a.id
+}
+output "EC2subnetId2" {
+  value = aws_subnet.akrawiec_subnet_pub_2c.id
+}
+output "EC2securityGroupId" {
+  value = aws_security_group.akrawiec_sg_pub.id
+}
 output "RDSsubnetGroupId" {
   value = aws_db_subnet_group.akrawiec_subnets_group.id
 }
-output "RDSsecurityGroupId" {
-  value = aws_security_group.akrawiec_sg_prv.id
+output "RDSsecurityGroupId1" {
+  value = aws_security_group.akrawiec_sg_prv1.id
 }
-
+output "RDSsecurityGroupId2" {
+  value = aws_security_group.akrawiec_sg_prv2.id
+}
 # module "mssql_security_group" {
 #   source = "terraform-aws-modules/security-group/aws//modules/mssql"
 

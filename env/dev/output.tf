@@ -8,6 +8,10 @@ output "vpc_list" {
   value = "${data.aws_vpcs.vpc_list.ids}"
 }
 
-output "publicIp" {
+output "publicIpEc1" {
   value = module.componentsEC2.publicIpEc1
+}
+
+output "publicIpEc2" {
+  value = module.componentsEC2.publicIpEc2
 }

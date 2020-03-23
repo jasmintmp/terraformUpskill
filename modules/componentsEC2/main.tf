@@ -1,33 +1,18 @@
 # MODUL components
-
-variable "EC2subnetId" {
-   description = "subnetId"
+#---------- InPut  ------------
+# 
+#-------------------------------
+variable "EC2subnetId1" {
+   description = "subnetId1"
 }
 
-variable "EC2securityGroup" {
+variable "EC2subnetId2" {
+   description = "subnetId2"
+}
+
+variable "EC2securityGroupId" {
    description = "securityGroup"
 }
-
-# ---------- S3 for test upload --------------
-# New resource for the S3 bucket our application will use.
-# NOTE: S3 bucket names must be unique across _all_ AWS accounts  
-# "my_bucket": local name can be refered from elsewhere in the same module.
-# ------------------------------------------- 
-resource "aws_s3_bucket" "my_bucket" {  
-  region  = "us-west-2"
-  bucket = "akrawiec-terraform-upload"
-  acl    = "private"
-  force_destroy = true
-}
-
-#------------ File upload to S3 --------------
-#-- after my_bucket.id has created - referer to .id
-# resource "aws_s3_bucket_object" "file_upload" {
-#   bucket = aws_s3_bucket.my_bucket.id
-#   key    = "my_files.zip"
-#   source = "${path.module}/my_files.zip"
-#   etag   = filemd5("${path.module}/my_files.zip")
-# }
 
 # ---------- Key Pair ----------
 # Set up in AWS your public key to allow putty access 
@@ -38,14 +23,14 @@ resource "aws_key_pair" "akrawiec_public_key" {
 }
 
 # ---------- EC2 	-----------
-# Virtual Server
+# Two Virtual Server
 # Create EC2 instance with AMI Image (public image) Ubuntu, 18.04 LTS,
 # --------------------------
 resource "aws_instance" "akrawiec_EC2_1" {
   ami           = "ami-06d51e91cea0dac8d"
   instance_type = "t2.micro"
-  subnet_id     = var.EC2subnetId
-  vpc_security_group_ids = [var.EC2securityGroup]
+  subnet_id     = var.EC2subnetId1
+  vpc_security_group_ids = [var.EC2securityGroupId]
   key_name = aws_key_pair.akrawiec_public_key.key_name
 
   tags = {
@@ -54,7 +39,21 @@ resource "aws_instance" "akrawiec_EC2_1" {
     Terraform = true
   }
   #---------- Script fired on launching EC2 --- not working
-    user_data = file("../../scripts/install_apache.sh")  
+  //  user_data = file("../../scripts/install_apache.sh")  
+}
+
+resource "aws_instance" "akrawiec_EC2_2" {
+  ami           = "ami-06d51e91cea0dac8d"
+  instance_type = "t2.micro"
+  subnet_id     = var.EC2subnetId2
+  vpc_security_group_ids = [var.EC2securityGroupId]
+  key_name = aws_key_pair.akrawiec_public_key.key_name
+
+  tags = {
+    Name = "akrawiec_EC2_2"
+    Owner = "akrawiec"
+    Terraform = true
+  }
 }
 
 #---------- OutPut  -----------
@@ -62,4 +61,8 @@ resource "aws_instance" "akrawiec_EC2_1" {
 #-------------------------------
 output "publicIpEc1" {
   value = aws_instance.akrawiec_EC2_1.public_ip
+}
+
+output "publicIpEc2" {
+  value = aws_instance.akrawiec_EC2_2.public_ip
 }

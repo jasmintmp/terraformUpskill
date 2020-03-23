@@ -48,17 +48,21 @@ module "network" {
   source = "./../../modules/network"
   vpc_cidr = "10.0.0.0/16"
   cidr_subnet_list = ["10.0.101.0/24","10.0.102.0/24"]
+  cidr_subnet_list_prv = ["10.0.1.0/24","10.0.2.0/24"]
   availability_zone_names = ["us-west-2a","us-west-2c"]
 }
 
 module "componentsEC2" {
   source = "./../../modules/componentsEC2"
-  EC2subnetId = module.network.EC2subnetId
-  EC2securityGroup = module.network.EC2securityGroup
+  EC2subnetId1 = module.network.EC2subnetId1
+  EC2subnetId2 = module.network.EC2subnetId2
+  EC2securityGroupId = module.network.EC2securityGroupId
+
 }
 
 module "componentsRDS" {
   source = "./../../modules/componentsRDS"
   RDSsubnetGroupId = module.network.RDSsubnetGroupId
-  RDSsecurityGroupId = module.network.RDSsecurityGroupId
+  RDSsecurityGroupId1 = module.network.RDSsecurityGroupId1
+  RDSsecurityGroupId2 = module.network.RDSsecurityGroupId2
 }
