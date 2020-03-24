@@ -12,8 +12,8 @@ resource "aws_vpc" "akrawiec_vpc" {
   instance_tenancy = "default"
 
   tags = {
-    Name = "akrawiec_vpc"
-    Owner = "akrawiec"
+    Name = "${var.owner}-vpc"
+    Owner = var.owner
     Terraform = "true"
     Environment = var.environment
   }
@@ -34,8 +34,8 @@ resource "aws_subnet" "akrawiec_subnet_pub"{
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "akrawiec_subnet_pub_${count.index}"
-    Owner = "akrawiec"
+    Name = "${var.owner}-${var.pub_subnet_name}-${count.index}"
+    Owner = var.owner
     Terraform = "true"
     Environment = var.environment
   }
@@ -63,7 +63,8 @@ resource "aws_security_group" "akrawiec_sg_pub"{
   }
   
  tags = {
-    Owner ="akrawiec"
+    Owner = var.owner
+    Name = "${var.owner}-${var.pub_sg_name}"
     Terraform = "true"
     Environment = var.environment
   }
@@ -122,9 +123,9 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
   }
 
   tags = {
-    Name = "akrawiec_vpc_nacl"
+    Name = "${var.owner}-nacl"
     Terraform = "true"
-    Onwer = "akrawiec"
+    Onwer = var.owner
     Environment = var.environment
   }
 }
@@ -138,8 +139,9 @@ resource "aws_internet_gateway" "akrawiec_vpc_gw" {
   vpc_id = aws_vpc.akrawiec_vpc.id
 #TODO associate subnet with Gateway
   tags = {
-    Name = "akrawiec_vpc_gw"
+    Name = "${var.owner}-vpc-gw"
     Terraform = "true"
+    Onwer = var.owner
     Environment = var.environment
   }
 }
@@ -156,8 +158,9 @@ resource "aws_route_table" "akrawiec_VPC_route_table" {
   depends_on = [aws_internet_gateway.akrawiec_vpc_gw]
   
   tags = {
-    Name = "akrawiec_VPC_route_table"
+    Name = "${var.owner}-vpc-route-table"
     Terraform = "true"
+    Onwer = var.owner
     Environment = var.environment
   }
 }
@@ -194,24 +197,24 @@ resource "aws_subnet" "akrawiec_subnet_prv" {
   availability_zone = var.availability_zone_names[count.index]
 
   tags = {
-    Name = "akrawiec_subnet_prv_${count.index}"
+    Name = "${var.owner}-${var.prv_subnet_name}-${count.index}"
     Terraform = true
-    Owner = "akrawiec"
+    Owner = var.owner
     Environment = var.environment
   }
 }
 
 # -------------- DB Subnet's Group --------
-# 2 Crate DB Subnets Group
+# 2 Crate DB private Subnets Group
 # -----------------------------------------
 resource "aws_db_subnet_group" "akrawiec_subnets_group" {
   name       = "akrawiec_subnets_group"
   subnet_ids = aws_subnet.akrawiec_subnet_prv.*.id
 
   tags = {
-    Name = "akrawiec DB subnet group"
+    Name = "${var.owner}-${var.prv_subnet_name}-group"
     Terraform = true
-    Owner = "akrawiec"
+    Owner = var.owner
     Environment = var.environment
   }
 }
@@ -238,7 +241,7 @@ resource "aws_security_group" "akrawiec_sg_prv"{
   }
 
   tags = {
-    Name = "RDS private Security Group"
+    Name = "${var.owner}-${var.prv_sg_name}"
     Terraform = true
     Environment = var.environment
   }

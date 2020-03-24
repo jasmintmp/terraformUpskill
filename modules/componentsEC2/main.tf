@@ -1,7 +1,7 @@
 # MODULE componentsEC2
 # ---------- EC2 	-----------
 # Two Virtual Server
-# Create EC2 instance with AMI Image (public image) Ubuntu, 18.04 LTS,
+# Create EC2 instance per each subnet
 # --------------------------
 resource "aws_instance" "akrawiec_EC2" {
   count                   = var.ec2_count
@@ -12,10 +12,11 @@ resource "aws_instance" "akrawiec_EC2" {
   key_name                = aws_key_pair.akrawiec_public_key.key_name
 
   tags = {
-    Name = "akrawiec_ec2_${count.index}"
-    Owner = "akrawiec"
-    Terraform = true
-  }
+    Name = "${var.owner}-ec2-${count.index}"
+    Terraform = "true"
+    Onwer = var.owner
+    Environment = var.environment
+    }
   #---------- Script fired on launching EC2 --- not working
   //  user_data = file("../../scripts/install_apache.sh")  
 }

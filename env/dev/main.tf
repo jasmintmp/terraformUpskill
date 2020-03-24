@@ -16,11 +16,13 @@
 #----------------------------------------------
 module "network" {
   source = "./../../modules/network"
+  environment = var.environment
+  owner = var.owner
+
   vpc_cidr = var.vpc_cidr
   pub_subnet_count = length(var.availability_zone_names)
   prv_subnet_count = var.rds_amount
   availability_zone_names = var.availability_zone_names
-  environment = var.environment
 }
 
 #--------------------------------
@@ -28,6 +30,9 @@ module "network" {
 #--------------------------------
 module "componentsEC2" {
   source = "./../../modules/componentsEC2"
+  environment = var.environment
+  owner = var.owner
+
   ec2_count = length(var.availability_zone_names)
   //ec2_count = 0
   ec2_subnet_ids = module.network.ec2_subnet_ids
@@ -39,10 +44,11 @@ module "componentsEC2" {
 #--------------------------------
 module "componentsRDS" {
   source = "./../../modules/componentsRDS"
+  environment = var.environment
+  owner = var.owner
+
   createInstance = var.create_rds_instance
   createReplica = var.create_rds_replica
   rds_subnet_group_id = module.network.rds_subnet_group_id
   rds_security_group_ids = module.network.rds_security_group_ids
-
-  #tags Environment = "dev"
 }

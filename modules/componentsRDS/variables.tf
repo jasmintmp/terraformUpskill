@@ -1,3 +1,10 @@
+# TAGs
+variable "environment" {
+}
+variable "owner" {
+}
+
+# Infra
 variable "createInstance" {
   type = bool
 }

@@ -1,5 +1,21 @@
+#TAGs
 variable "environment" {
 }
+variable "owner" {
+}
+variable "pub_subnet_name" {
+  default = "subnet-pub"
+}
+variable "prv_subnet_name" {
+  default = "subnet-prv"
+}
+variable "pub_sg_name" {
+  default = "sg-pub"
+}
+variable "prv_sg_name" {
+  default = "sg-prv"
+}
+#Infra
 variable "vpc_cidr" {
 }
 variable "pub_subnet_count" {

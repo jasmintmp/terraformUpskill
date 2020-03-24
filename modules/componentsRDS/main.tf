@@ -9,27 +9,26 @@ resource "aws_db_instance" "akrawiec_RDS_master" {
   db_subnet_group_name = var.rds_subnet_group_id
   vpc_security_group_ids = var.rds_security_group_ids
 
-  identifier           = var.instance_name
-  username             = var.username
-  password             = var.password
+  identifier              = var.instance_name
+  username                = var.username
+  password                = var.password
 
-  allocated_storage    = var.allocated_storage
-  storage_type         = var.storage_type
-  engine               = var.engine
-  engine_version       = var.engine_version
-  instance_class       = var.instance_class
-  port                 = var.port
-  parameter_group_name = var.parameter_group_name
-  skip_final_snapshot  = var.skip_final_snapshot
-  # maintenance_window = "Mon:00:00-Mon:02:00"
-  # backup_window = "02:00-04:00"
+  allocated_storage       = var.allocated_storage
+  storage_type            = var.storage_type
+  engine                  = var.engine
+  engine_version          = var.engine_version
+  instance_class          = var.instance_class
+  port                    = var.port
+  parameter_group_name    = var.parameter_group_name
+  skip_final_snapshot     = var.skip_final_snapshot
   backup_retention_period = var.backup_retention_period
   apply_immediately       = var.apply_immediately
 
   tags = {
-    Name = "akrawiec_RDS_master"
-    Owner = "akrawiec"
-    Terraform = true
+  Name = "${var.owner}-rds-instance"
+  Terraform = "true"
+  Onwer = var.owner
+  Environment = var.environment
   }
 }
 
@@ -41,31 +40,29 @@ resource "aws_db_instance" "akrawiec_RDS_replica" {
 
   //https://github.com/terraform-providers/terraform-provider-aws/issues/528
   //create
-  replicate_source_db  = aws_db_instance.akrawiec_RDS_master[count.index].arn
+  //replicate_source_db  = aws_db_instance.akrawiec_RDS_master[count.index].arn
   //modify
-  //replicate_source_db  = aws_db_instance.akrawiec_RDS_master[count.index].identifier
+  replicate_source_db  = aws_db_instance.akrawiec_RDS_master[count.index].identifier
   db_subnet_group_name = var.rds_subnet_group_id
   vpc_security_group_ids = var.rds_security_group_ids
   
-  identifier           = "${var.instance_name}-replica"
-  username             = ""
-  password             = ""
-  allocated_storage    = var.allocated_storage
-  storage_type         = var.storage_type
-  engine               = var.engine
-  engine_version       = var.engine_version
-  instance_class       = var.instance_class
-  port                 = var.port
-  skip_final_snapshot  = var.skip_final_snapshot
-
-  # maintenance_window = "Mon:00:00-Mon:02:00"
-  # backup_window = "02:00-04:00"
-  backup_retention_period = 1
+  identifier              = "${var.instance_name}-replica"
+  username                = ""
+  password                = ""
+  allocated_storage       = var.allocated_storage
+  storage_type            = var.storage_type
+  engine                  = var.engine
+  engine_version          = var.engine_version
+  instance_class          = var.instance_class
+  port                    = var.port
+  skip_final_snapshot     = var.skip_final_snapshot
+  backup_retention_period = var.backup_retention_period
   apply_immediately       = var.apply_immediately
 
   tags = {
-    Name = "akrawiec_RDS_replica"
-    Owner = "akrawiec"
-    Terraform = true
+  Name = "${var.owner}-rds-instance-replica"
+  Terraform = "true"
+  Onwer = var.owner
+  Environment = var.environment
   }
 }
