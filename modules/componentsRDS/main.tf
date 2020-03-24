@@ -1,27 +1,25 @@
-# MODUL components
+# MODULE componentsRDS
 variable "createInstance" {
   type = bool
 }
 variable "createReplica" {
   type = bool
 }
-variable "RDSsubnetGroupId" {
+variable "rds_subnet_group_id" {
    description = "subnetId"
 }
 
-variable "RDSsecurityGroupId1" {
-   description = "securityGroupId"
+variable "rds_security_group_ids" {
+   description = "List of security groups master and replica"
 }
 
-variable "RDSsecurityGroupId2" {
-   description = "securityGroupId"
-}
 # -------------- RDS ----------- -----------
-# Crate Instance DB Server  (10min)
+# Crate Instance DB Server  (10min) default RT, NACL
 # RDS with access from EC2(SecGroup) -> RDS allowed
 # -----------------------------------------
 resource "aws_db_instance" "akrawiec_RDS_master" {
   count = var.createInstance ? 1 : 0
+
   allocated_storage    = 20
   storage_type         = "gp2"
   engine               = "mysql"
@@ -33,11 +31,11 @@ resource "aws_db_instance" "akrawiec_RDS_master" {
   port                 = "3306"
   parameter_group_name = "default.mysql5.7"
  
-  availability_zone = "us-west-2a"
+  #availability_zone = "us-west-2a"
 
   skip_final_snapshot  = true
-  db_subnet_group_name = var.RDSsubnetGroupId
-  vpc_security_group_ids = [var.RDSsecurityGroupId1]
+  db_subnet_group_name = var.rds_subnet_group_id
+  vpc_security_group_ids = var.rds_security_group_ids
 
   maintenance_window = "Mon:00:00-Mon:02:00"
   backup_window = "02:00-04:00"
@@ -56,9 +54,12 @@ resource "aws_db_instance" "akrawiec_RDS_master" {
 # -----------------------------------------
 resource "aws_db_instance" "akrawiec_RDS_replica" {
   count = var.createReplica ? 1 : 0
-  #replicate_source_db  = aws_db_instance.akrawiec_RDS_master[count.index].identifier
-  #Amazon Resource Name - AWS bug
+
+  //https://github.com/terraform-providers/terraform-provider-aws/issues/528
+  //create
   replicate_source_db  = aws_db_instance.akrawiec_RDS_master[count.index].arn
+  //modify
+  //replicate_source_db  = aws_db_instance.akrawiec_RDS_master[count.index].identifier
   
   allocated_storage    = 20
   storage_type         = "gp2"
@@ -70,18 +71,23 @@ resource "aws_db_instance" "akrawiec_RDS_replica" {
   password             = ""
   port                 = "3306"
   skip_final_snapshot  = true
-  db_subnet_group_name = var.RDSsubnetGroupId
-  vpc_security_group_ids = [var.RDSsecurityGroupId2]
+  db_subnet_group_name = var.rds_subnet_group_id
+  vpc_security_group_ids = var.rds_security_group_ids
   
   maintenance_window = "Mon:00:00-Mon:02:00"
   backup_window = "02:00-04:00"
   backup_retention_period = 1
 
-  availability_zone = "us-west-2c"
+  #availability_zone = "us-west-2c"
 
   tags = {
     Name = "akrawiec_RDS_replica"
     Owner = "akrawiec"
     Terraform = true
   }
+}
+
+output "rds_instance_endpoints" {
+  description = "A list of all cluster instance endpoints"
+  value       = [aws_db_instance.akrawiec_RDS_master.*.endpoint, aws_db_instance.akrawiec_RDS_replica.*.endpoint]
 }

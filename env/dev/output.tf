@@ -1,17 +1,7 @@
-#--------- DataSource ------------------------
-#  Data from:  provider, HTTP url, ...  , filters
-#---------------------------------------------
-data "aws_vpcs" "vpc_list" {
+output "ec2_public_ips" {
+  value = module.componentsEC2.ec2_public_ips
 }
 
-output "vpc_list" {
-  value = "${data.aws_vpcs.vpc_list.ids}"
-}
-
-output "publicIpEc1" {
-  value = module.componentsEC2.publicIpEc1
-}
-
-output "publicIpEc2" {
-  value = module.componentsEC2.publicIpEc2
+output "rds_instance_endpoints" {
+  value = module.componentsRDS.rds_instance_endpoints
 }

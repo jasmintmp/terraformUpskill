@@ -1,20 +1,30 @@
-# MODUL network
+# MODULE network
 variable "vpc_cidr" {
 }
-variable "cidr_subnet_list" {
-    type = list(string)
+variable "pub_subnet_count" {
+  type = number
 }
-variable "cidr_subnet_list_prv" {
-    type = list(string)
+variable "prv_subnet_count" {
 }
-
 variable "availability_zone_names" {
   type = list(string)
-  default =["us-west-2"]
 }
+variable "ingress_pub_ports" {
+  type        = list(number)
+  description = "list of ingress EC2 access ports"
+  default     = [22, 80, 443]
+}
+variable "ingress_prv_ports" {
+  type        = list(number)
+  description = "list of ingress RDS access ports"
+  default     = [22, 3306]
+}
+
+
 locals{
   zero-address = "0.0.0.0/0"
 }
+
 # -------------- VPC ----------------------
 # VPC comes with a default security group, unless it'll be provided.
 # VPC restriction on profile = 1
@@ -33,38 +43,26 @@ resource "aws_vpc" "akrawiec_vpc" {
 # EC2 - preparation, public Internet access 
 # --------------------------------------------------------------------------------------------
 # -------------- Subnet ----------------------
-#  Subnet_1
+#  Add public subnets - unique CIDR/VPC/AZ cidrsubnet()
 #---------------------------------------------
-resource "aws_subnet" "akrawiec_subnet_pub_2a" {
+resource "aws_subnet" "akrawiec_subnet_pub"{
+  count = var.pub_subnet_count
   vpc_id     = aws_vpc.akrawiec_vpc.id
-  cidr_block = var.cidr_subnet_list[0]
-  availability_zone = var.availability_zone_names[0]
-  map_public_ip_on_launch = true
-  tags = {
-    Name = "akrawiec_subnet_pub_2a"
-    Owner = "akrawiec"
-    Terraform = "true"
-  }
-}
+  //cidr_block = "10.0.2${count.index}.0/24"
+  cidr_block = cidrsubnet(aws_vpc.akrawiec_vpc.cidr_block, 8, count.index+1)
 
-# -------------- Subnet ----------------------
-#  Subnet_2
-#---------------------------------------------
-resource "aws_subnet" "akrawiec_subnet_pub_2c" {
-  vpc_id     = aws_vpc.akrawiec_vpc.id
-  cidr_block = var.cidr_subnet_list[1]
-  availability_zone = var.availability_zone_names[1]
+  availability_zone = var.availability_zone_names[count.index]
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "akrawiec_subnet_pub_2c"
+    Name = "akrawiec_subnet_pub_${count.index}"
     Owner = "akrawiec"
     Terraform = "true"
   }
 }
 
 # -------------- Security Group -----------
-# Security Group - instance firewall 
+# Add Public Security Group - instance firewall 
 # Statefull - no need return trip
 # -----------------------------------------
 resource "aws_security_group" "akrawiec_sg_pub"{
@@ -72,107 +70,76 @@ resource "aws_security_group" "akrawiec_sg_pub"{
   description = "Allow SSH"
   vpc_id = aws_vpc.akrawiec_vpc.id
 
-  # allow ingress of port 22
-  ingress {
-    description = "SSH from VPC"
-    from_port   = 22
-    to_port     = 22
-    protocol    = "tcp"
-    cidr_blocks = [local.zero-address]
+  dynamic "ingress"{
+    iterator = port
+    for_each = var.ingress_pub_ports
+    content {
+      from_port = port.value
+      to_port = port.value
+      protocol = "tcp"
+      cidr_blocks = [local.zero-address]
+    }
   }
-
-  # allow ingress of port 80
-  ingress {
-    description = "HTTP from VPC"
-    from_port   = 80
-    to_port     = 80
-    protocol    = "tcp"
-    cidr_blocks = [local.zero-address]
-  }
-
-  # allow egress of all ports
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [local.zero-address]
-  }
+  
+  # # allow egress of all ports
+  # egress {
+  #   from_port   = 0
+  #   to_port     = 0
+  #   protocol    = "-1"
+  #   cidr_blocks = [local.zero-address]
+  # }
 
  tags = {
+    Owner ="akrawiec"
     Terraform = "true"
   }
 }
 
+
 # -------------- NACL ----------------------
-# NACL - subnet firewall   Access Controll List
+# Add NACL - subnet firewall   Access Controll List
 # -----------------------------------------
+variable "ingress_ports_nacl" {
+  description = "map of ingress nacl ports"
+  default     = {
+      "100" = 22
+      "200" = 80
+      "400" = 443
+      }
+}
 resource "aws_network_acl" "akrawiec_vpc_nacl" {
-  vpc_id = aws_vpc.akrawiec_vpc.id
-   subnet_ids = [aws_subnet.akrawiec_subnet_pub_2a.id, aws_subnet.akrawiec_subnet_pub_2c.id]
-
-  # allow ingress port 22
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = local.zero-address
-    from_port  = 22
-    to_port    = 22
-  }
-
-# allow ingress port 80 
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 200
-    action     = "allow"
-    cidr_block = local.zero-address 
-    from_port  = 80
-    to_port    = 80
-  }
-
-# allow ingress auxiliary ports 
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 300
-    action     = "allow"
-    cidr_block =  local.zero-address
-    from_port  = 1024
-    to_port    = 65535
-  }
-
-# allow ingress port 443 https
-  ingress {
-    protocol   = "tcp"
-    rule_no    = 400
-    action     = "allow"
-    cidr_block = local.zero-address
-    from_port  = 443
-    to_port    = 443
-  }
-
-
-  # allow egress port 22 
-  egress {
-    protocol   = "tcp"
-    rule_no    = 100
-    action     = "allow"
-    cidr_block = local.zero-address
-    from_port  = 22 
-    to_port    = 22
-  }
-
-  # allow egress port 80 
-  egress {
-    protocol   = "tcp"
-    rule_no    = 200
-    action     = "allow"
-    cidr_block = local.zero-address
-    from_port  = 80  
-    to_port    = 80 
-  }
   
-  # allow egress auxiliary ports
-  egress {
+  vpc_id = aws_vpc.akrawiec_vpc.id
+  subnet_ids = aws_subnet.akrawiec_subnet_pub.*.id
+
+  dynamic "ingress"{
+    for_each = var.ingress_ports_nacl
+    iterator = rule
+    content{
+      rule_no   = rule.key
+      from_port = rule.value
+      to_port   = rule.value
+      protocol  = "tcp"
+      cidr_block= local.zero-address
+      action    = "allow"
+    }
+  }
+
+  dynamic "egress"{
+      for_each = var.ingress_ports_nacl
+      iterator = rule
+      content{
+        rule_no   = rule.key
+        from_port = rule.value
+        to_port   = rule.value
+        protocol  = "tcp"
+        cidr_block= local.zero-address
+        action    = "allow"
+      }
+    }
+
+  # allow ingress auxiliary ports, Ephemeral Ports 
+  ingress {
     protocol   = "tcp"
     rule_no    = 300
     action     = "allow"
@@ -180,27 +147,26 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
     from_port  = 1024
     to_port    = 65535
   }
-
-  # allow egress port 443 https
   egress {
     protocol   = "tcp"
-    rule_no    = 400
+    rule_no    = 300
     action     = "allow"
-    cidr_block = local.zero-address
-    from_port  = 443
-    to_port    = 443
+    cidr_block =  local.zero-address
+    from_port  = 1024
+    to_port    = 65535
   }
 
   tags = {
     Name = "akrawiec_vpc_nacl"
     Terraform = "true"
+    Onwer = "akrawiec"
   }
 }
 
-
-# -------------- Gateway ----------------------
-# Internet Gateway  
-# -----------------------------------------
+# --------------------------------------------------------------
+#  Create the Internet Access, IGW, RT, Routes, Associations
+# --------------------------------------------------------------
+# 1 Add Internet Gateway  
 resource "aws_internet_gateway" "akrawiec_vpc_gw" {
   vpc_id = aws_vpc.akrawiec_vpc.id
 #TODO associate subnet with Gateway
@@ -210,9 +176,7 @@ resource "aws_internet_gateway" "akrawiec_vpc_gw" {
   }
 }
 
-# -------------- Route ----------------------
-# Route Table  
-# -----------------------------------------
+# 2 Add Route Table : direct internet traffic to internet gateway 
 resource "aws_route_table" "akrawiec_VPC_route_table" {
   vpc_id = aws_vpc.akrawiec_vpc.id
   
@@ -220,7 +184,7 @@ resource "aws_route_table" "akrawiec_VPC_route_table" {
     cidr_block = local.zero-address
     gateway_id = aws_internet_gateway.akrawiec_vpc_gw.id
   }
-#check if exaggerated
+  # check if exaggerated
   depends_on = [aws_internet_gateway.akrawiec_vpc_gw]
   
   tags = {
@@ -229,25 +193,22 @@ resource "aws_route_table" "akrawiec_VPC_route_table" {
   }
 }
 
-
-# -------------- Create the Internet Access --
-# Direct internet traffic to internet gateway 
-# --------------------------------------------
+# 3 Add Route Table: subnets access to Internet Gateway
 resource "aws_route" "akrawiec_VPC_internet_access" {
   route_table_id         = aws_route_table.akrawiec_VPC_route_table.id
   destination_cidr_block = local.zero-address
   gateway_id             = aws_internet_gateway.akrawiec_vpc_gw.id
 } 
 
-# Associate the Route Table with the Subnet1
+# 4.1 Associate the Route Table with the Subnet1
 resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub1" {
-  subnet_id      = aws_subnet.akrawiec_subnet_pub_2a.id
+  subnet_id      = aws_subnet.akrawiec_subnet_pub[0].id
   route_table_id = aws_route_table.akrawiec_VPC_route_table.id
 } 
 
-# Associate the Route Table with the Subnet2
+# 4.2 Associate the Route Table with the Subnet2
 resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub2" {
-  subnet_id      = aws_subnet.akrawiec_subnet_pub_2c.id
+  subnet_id      = aws_subnet.akrawiec_subnet_pub[1].id
   route_table_id = aws_route_table.akrawiec_VPC_route_table.id
 }
 
@@ -257,28 +218,16 @@ resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub2" {
 #------------------------------- 
 # 1 Creating two Private Subnets 
 #-------------------------------
-#  Subnet_3 2a
-#-------------------------
-resource "aws_subnet" "akrawiec_subnet_prv_2a" {
+resource "aws_subnet" "akrawiec_subnet_prv" {
+  count = var.prv_subnet_count
   vpc_id     = aws_vpc.akrawiec_vpc.id  
-  cidr_block = var.cidr_subnet_list_prv[0]
-  availability_zone = var.availability_zone_names[0]
-  tags = {
-    Name = "akrawiec_subnet_prv_2a"
-     Owner = "akrawiec"
-  }
-}
-#-------------------------
-#  Subnet_4 2c
-#-------------------------
-resource "aws_subnet" "akrawiec_subnet_prv_2c" {
-  vpc_id     = aws_vpc.akrawiec_vpc.id
-  cidr_block = var.cidr_subnet_list_prv[1]
-  availability_zone = var.availability_zone_names[1]
-  tags = {
-    Name = "akrawiec_subnet_prv_2c"
-     Owner = "akrawiec"
+  cidr_block = "10.0.10${count.index}.0/24"
+  availability_zone = var.availability_zone_names[count.index]
 
+  tags = {
+    Name = "akrawiec_subnet_prv_${count.index}"
+    Terraform = true
+    Owner = "akrawiec"
   }
 }
 
@@ -287,122 +236,58 @@ resource "aws_subnet" "akrawiec_subnet_prv_2c" {
 # -----------------------------------------
 resource "aws_db_subnet_group" "akrawiec_subnets_group" {
   name       = "akrawiec_subnets_group"
-  subnet_ids = [aws_subnet.akrawiec_subnet_prv_2a.id, aws_subnet.akrawiec_subnet_prv_2c.id]
+  subnet_ids = aws_subnet.akrawiec_subnet_prv.*.id
 
   tags = {
     Name = "akrawiec DB subnet group"
+    Terraform = true
+    Owner = "akrawiec"
   }
 }
 
 # -------------- RDS Security Group -----------
-# 3.1 Crate PRIVATE Security Group 
+# 3.1 Crate master/replica Security Groups block
 # RDS with Source EC2(SecGroup) -> RDS allowed
 # -----------------------------------------
-resource "aws_security_group" "akrawiec_sg_prv1"{
-  name = "akrawiec_sg_prv1"
-  description = "Allow RDS"
+resource "aws_security_group" "akrawiec_sg_prv"{
+  count = var.prv_subnet_count
+  name = "akrawiec_sg_prv_${count.index}"
+  description = "Allow EC2 access to RDS"
   vpc_id = aws_vpc.akrawiec_vpc.id
 
-  # allow ingress of port 1433
-  ingress {
-    description = "Source EC2 sg to RDS MSSQL"
-    from_port   = 1433
-    to_port     = 1433
-    protocol    = "tcp"
-    security_groups = [aws_security_group.akrawiec_sg_pub.id]
+  dynamic "ingress"{
+    iterator = port
+    for_each = var.ingress_prv_ports
+    content {
+      from_port = port.value
+      to_port = port.value
+      protocol = "tcp"
+      security_groups = [aws_security_group.akrawiec_sg_pub.id]
+    }
   }
+}
 
-  # allow ingress of port 3306
-  ingress {
-    description = "Source EC2 sg to RDS MySQL"
-    from_port   = 3306
-    to_port     = 3306
-    protocol    = "tcp"
-    security_groups = [aws_security_group.akrawiec_sg_pub.id]
-  }
-
-  # allow ingress ssh
-  ingress {
-        from_port = 22
-        to_port = 22
-        protocol = "tcp"
-        cidr_blocks = [local.zero-address]
-  }
- # allow egress of all ports
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [local.zero-address]
-  }
+ 
 
   #  tags {
   #       Name = "DBServerSG"
   #       Terraform = true
   #   }
 
-}
-
-# 3.2 Crate PRIVATE Security Group 
-resource "aws_security_group" "akrawiec_sg_prv2"{
-  name = "akrawiec_sg_prv2"
-  description = "Allow RDS"
-  vpc_id = aws_vpc.akrawiec_vpc.id
-
-  # allow ingress of port 1433
-  ingress {
-    description = "Source EC2 sg to RDS"
-    from_port   = 1433
-    to_port     = 1433
-    protocol    = "tcp"
-    security_groups = [aws_security_group.akrawiec_sg_pub.id]
-  }
-
-  # allow ingress ssh
-  ingress {
-        from_port = 22
-        to_port = 22
-        protocol = "tcp"
-        cidr_blocks = [local.zero-address]
-  }
- # allow egress of all ports
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = [local.zero-address]
-  }
-
-  #  tags {
-  #       Name = "DBServerSG"
-  #       Terraform = true
-  #   }
-
-}
+#}
 
 #---------- OutPut  -----------
 # 
 #-------------------------------
-output "EC2subnetId1" {
-  value = aws_subnet.akrawiec_subnet_pub_2a.id
+output "ec2_subnet_ids" {
+  value = aws_subnet.akrawiec_subnet_pub.*.id
 }
-output "EC2subnetId2" {
-  value = aws_subnet.akrawiec_subnet_pub_2c.id
-}
-output "EC2securityGroupId" {
+output "ec2_sg_id" {
   value = aws_security_group.akrawiec_sg_pub.id
 }
-output "RDSsubnetGroupId" {
+output "rds_subnet_group_id" {
   value = aws_db_subnet_group.akrawiec_subnets_group.id
 }
-output "RDSsecurityGroupId1" {
-  value = aws_security_group.akrawiec_sg_prv1.id
+output "rds_security_group_ids" {
+  value = aws_security_group.akrawiec_sg_prv.*.id
 }
-output "RDSsecurityGroupId2" {
-  value = aws_security_group.akrawiec_sg_prv2.id
-}
-# module "mssql_security_group" {
-#   source = "terraform-aws-modules/security-group/aws//modules/mssql"
-
-#   # omitted...
-# }

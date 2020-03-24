@@ -1,71 +1,47 @@
 #  ROOT
 #   ├── modules
-#   │   └── network
-#   │     └── main.tf
-#   │   └── components
-#   │     └── main.tf
-#   │
+#   │   └── network, variables.tf, outputs.tf   
+#   │   └── componentsEC2, variables.tf, outputs.tf
+#   │   └── componentsRDS, variables.tf, outputs.tf
 #   ├── env
 #       ├── dev  
-#       │ └── main.tf
-#       │ └── variables.tf
-#       │ └── outputs.tf
+#       │ └── main.tf, variables.tf, outputs.tf
 #       ├── prod
-#       │ └── main.tf
-#       │ └── variables.tf
-#       └── staging
-#         └── main.tf
-#         └── variables.tf
+#         └── main.tf, variables.tf, outputs.tf
 
-
-# ---------- Provider ----------
-# Getting Started
-# This is introduction script for terraform with basic commands.
-# ------------------------------
-provider "aws" {
-  profile = "default"
-  region  = var.region
-}
-#----------- Backend Configuration --------------
-# First S3 must be created from panel, 
-# Configuration is moved to remote state [init];  destroy:  remove .terraform/ 
-# The Terraform state is written to the key
-# It's used to read state from one place - hence script can be run undependetly from different localizations.
-#---------------------------------------------------
-
-terraform {
-  backend "s3" {
-    bucket = "akrawiec-terraform-state"
-    key    = "backend/key"
-    region  = "us-west-2"
-  }
-}
-
-#------------- Modules ----------
-# subnets 10.0.a.x  10.0.b.x 
-#--------------------------------
+#------------- Modules -------------------------
+# Create: two public subnets in differend AZ
+# with Internet GT, SG, RT that can access RDS
+# Two private subnet RDS in differend AZ 
+#----------------------------------------------
 module "network" {
   source = "./../../modules/network"
-  vpc_cidr = "10.0.0.0/16"
-  cidr_subnet_list = ["10.0.101.0/24","10.0.102.0/24"]
-  cidr_subnet_list_prv = ["10.0.1.0/24","10.0.2.0/24"]
-  availability_zone_names = ["us-west-2a","us-west-2c"]
+  vpc_cidr = var.vpc_cidr
+  pub_subnet_count = length(var.availability_zone_names)
+  prv_subnet_count = var.rds_amount
+  availability_zone_names = var.availability_zone_names
 }
 
+#--------------------------------
+# Create: two EC2
+#--------------------------------
 module "componentsEC2" {
   source = "./../../modules/componentsEC2"
-  EC2subnetId1 = module.network.EC2subnetId1
-  EC2subnetId2 = module.network.EC2subnetId2
-  EC2securityGroupId = module.network.EC2securityGroupId
-
+  ec2_count = length(var.availability_zone_names)
+  //ec2_count = 0
+  ec2_subnet_ids = module.network.ec2_subnet_ids
+  ec2_security_group_id = module.network.ec2_sg_id
 }
 
+#--------------------------------
+# Create: two RDS 
+#--------------------------------
 module "componentsRDS" {
   source = "./../../modules/componentsRDS"
-  createInstance = true
-  createReplica = true
-  RDSsubnetGroupId = module.network.RDSsubnetGroupId
-  RDSsecurityGroupId1 = module.network.RDSsecurityGroupId1
-  RDSsecurityGroupId2 = module.network.RDSsecurityGroupId2
+  createInstance = var.create_rds_instance
+  createReplica = var.create_rds_replica
+  rds_subnet_group_id = module.network.rds_subnet_group_id
+  rds_security_group_ids = module.network.rds_security_group_ids
+
   #tags Environment = "dev"
 }
