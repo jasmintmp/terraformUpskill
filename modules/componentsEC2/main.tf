@@ -14,7 +14,7 @@ resource "aws_instance" "this" {
   tags = {
     Name = "${var.owner}-ec2-${count.index}"
     Terraform = "true"
-    Onwer = var.owner
+    Owner = var.owner
     Environment = var.environment
     }
   #---------- Script fired on launching EC2 --- not working

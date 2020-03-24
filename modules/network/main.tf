@@ -205,7 +205,7 @@ resource "aws_subnet" "subnet_prv" {
 
   tags = {
     Name = "${var.owner}-${var.prv_subnet_name}-${count.index}"
-    Terraform = true
+    Terraform = "true"
     Owner = var.owner
     Environment = var.environment
   }
@@ -220,7 +220,7 @@ resource "aws_db_subnet_group" "this" {
 
   tags = {
     Name = "${var.owner}-${var.prv_subnet_name}-group"
-    Terraform = true
+    Terraform = "true"
     Owner = var.owner
     Environment = var.environment
   }
@@ -249,7 +249,7 @@ resource "aws_security_group" "this"{
 
   tags = {
     Name = "${var.owner}-${var.prv_sg_name}"
-    Terraform = true
+    Terraform = "true"
     Environment = var.environment
   }
 }
