@@ -7,7 +7,7 @@ locals{
 # VPC comes with a default security group, unless it'll be provided.
 # VPC restriction on profile = 1
 #------------------------------------------
-resource "aws_vpc" "akrawiec_vpc" {
+resource "aws_vpc" "this" {
   cidr_block      = var.vpc_cidr
   instance_tenancy = "default"
 
@@ -24,11 +24,11 @@ resource "aws_vpc" "akrawiec_vpc" {
 # -------------- Subnet ----------------------
 #  Add public subnets - unique CIDR/VPC/AZ cidrsubnet()
 #---------------------------------------------
-resource "aws_subnet" "akrawiec_subnet_pub"{
+resource "aws_subnet" "public"{
   count = var.pub_subnet_count
-  vpc_id     = aws_vpc.akrawiec_vpc.id
+  vpc_id     = aws_vpc.this.id
   //cidr_block = "10.0.2${count.index}.0/24"
-  cidr_block = cidrsubnet(aws_vpc.akrawiec_vpc.cidr_block, 8, count.index+1)
+  cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 8, count.index+1)
 
   availability_zone = var.availability_zone_names[count.index]
   map_public_ip_on_launch = true
@@ -41,15 +41,15 @@ resource "aws_subnet" "akrawiec_subnet_pub"{
   }
 }
 
-# -------------- Security Group -----------
+# -------------- EC2 Security Group --------
 # Add Public Security Group - instance firewall 
 # Statefull - no need return trip
 # Default SG allows traffic
 # -----------------------------------------
-resource "aws_security_group" "akrawiec_sg_pub"{
-  name = "akrawiec_sg_pub"
+resource "aws_security_group" "public_sg"{
+  #name = "akrawiec_sg_pub"
   description = "Allow SSH"
-  vpc_id = aws_vpc.akrawiec_vpc.id
+  vpc_id = aws_vpc.this.id
 
   dynamic "ingress"{
     iterator = port
@@ -74,9 +74,9 @@ resource "aws_security_group" "akrawiec_sg_pub"{
 # Add NACL - subnet firewall  Access Controll List
 # Default NACL allows traffic
 # -----------------------------------------
-resource "aws_network_acl" "akrawiec_vpc_nacl" {
-  vpc_id = aws_vpc.akrawiec_vpc.id
-  subnet_ids = aws_subnet.akrawiec_subnet_pub.*.id
+resource "aws_network_acl" "public_vpc_nacl" {
+  vpc_id = aws_vpc.this.id
+  subnet_ids = aws_subnet.public.*.id
 
   dynamic "ingress"{
     for_each = var.ingress_ports_nacl
@@ -135,8 +135,8 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
 #  Remember to allow access NACL(with ephemeral), SecGroups
 # --------------------------------------------------------------
 # 1 Add Internet Gateway  
-resource "aws_internet_gateway" "akrawiec_vpc_gw" {
-  vpc_id = aws_vpc.akrawiec_vpc.id
+resource "aws_internet_gateway" "this" {
+  vpc_id = aws_vpc.this.id
 #TODO associate subnet with Gateway
   tags = {
     Name = "${var.owner}-vpc-gw"
@@ -147,15 +147,15 @@ resource "aws_internet_gateway" "akrawiec_vpc_gw" {
 }
 
 # 2 Add Route Table : direct internet traffic to internet gateway 
-resource "aws_route_table" "akrawiec_VPC_route_table" {
-  vpc_id = aws_vpc.akrawiec_vpc.id
+resource "aws_route_table" "vpc_route_table" {
+  vpc_id = aws_vpc.this.id
   
   route {
     cidr_block = local.zero-address
-    gateway_id = aws_internet_gateway.akrawiec_vpc_gw.id
+    gateway_id = aws_internet_gateway.this.id
   }
   # check if exaggerated
-  depends_on = [aws_internet_gateway.akrawiec_vpc_gw]
+  depends_on = [aws_internet_gateway.this]
   
   tags = {
     Name = "${var.owner}-vpc-route-table"
@@ -166,22 +166,29 @@ resource "aws_route_table" "akrawiec_VPC_route_table" {
 }
 
 # 3 Add Route Table: subnets access to Internet Gateway
-resource "aws_route" "akrawiec_VPC_internet_access" {
-  route_table_id         = aws_route_table.akrawiec_VPC_route_table.id
+resource "aws_route" "vpc_internet_access" {
+  route_table_id         = aws_route_table.vpc_route_table.id
   destination_cidr_block = local.zero-address
-  gateway_id             = aws_internet_gateway.akrawiec_vpc_gw.id
+  gateway_id             = aws_internet_gateway.this.id
 } 
 
-# 4.1 Associate the Route Table with the Subnet1
-resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub1" {
-  subnet_id      = aws_subnet.akrawiec_subnet_pub[0].id
-  route_table_id = aws_route_table.akrawiec_VPC_route_table.id
-} 
+# # 4.1 Associate the Route Table with the Subnet1
+# resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub1" {
+#   subnet_id      = aws_subnet.public[0].id
+#   route_table_id = aws_route_table.vpc_route_table.id
+# } 
 
-# 4.2 Associate the Route Table with the Subnet2
-resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub2" {
-  subnet_id      = aws_subnet.akrawiec_subnet_pub[1].id
-  route_table_id = aws_route_table.akrawiec_VPC_route_table.id
+# # 4.2 Associate the Route Table with the Subnet2
+# resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub2" {
+#   subnet_id      = aws_subnet.public[1].id
+#   route_table_id = aws_route_table.vpc_route_table.id
+# }
+
+# 4.1 Associate the Route Table with the public Subnets
+resource "aws_route_table_association" "vpc_rt_with_subnets" {
+  count = length(aws_subnet.public.*.id)
+  subnet_id      = aws_subnet.public[count.index].id
+  route_table_id = aws_route_table.vpc_route_table.id
 }
 
 # --------------------------------------------------------------------------------------------
@@ -190,9 +197,9 @@ resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub2" {
 #------------------------------- 
 # 1 Creating two Private Subnets 
 #-------------------------------
-resource "aws_subnet" "akrawiec_subnet_prv" {
+resource "aws_subnet" "subnet_prv" {
   count = var.prv_subnet_count
-  vpc_id     = aws_vpc.akrawiec_vpc.id  
+  vpc_id     = aws_vpc.this.id  
   cidr_block = "10.0.10${count.index}.0/24"
   availability_zone = var.availability_zone_names[count.index]
 
@@ -207,9 +214,9 @@ resource "aws_subnet" "akrawiec_subnet_prv" {
 # -------------- DB Subnet's Group --------
 # 2 Crate DB private Subnets Group
 # -----------------------------------------
-resource "aws_db_subnet_group" "akrawiec_subnets_group" {
-  name       = "akrawiec_subnets_group"
-  subnet_ids = aws_subnet.akrawiec_subnet_prv.*.id
+resource "aws_db_subnet_group" "this" {
+  #name       = "akrawiec_subnets_group"
+  subnet_ids = aws_subnet.subnet_prv.*.id
 
   tags = {
     Name = "${var.owner}-${var.prv_subnet_name}-group"
@@ -223,11 +230,11 @@ resource "aws_db_subnet_group" "akrawiec_subnets_group" {
 # 3.1 Crate master/replica Security Groups block
 # RDS with Source EC2(SecGroup) -> RDS allowed
 # -----------------------------------------
-resource "aws_security_group" "akrawiec_sg_prv"{
+resource "aws_security_group" "this"{
   count = var.prv_subnet_count
-  name = "akrawiec_sg_prv_${count.index}"
+  #name = "akrawiec_sg_prv_${count.index}"
   description = "Allow EC2 access to RDS"
-  vpc_id = aws_vpc.akrawiec_vpc.id
+  vpc_id = aws_vpc.this.id
 
   dynamic "ingress"{
     iterator = port
@@ -236,7 +243,7 @@ resource "aws_security_group" "akrawiec_sg_prv"{
       from_port = port.value
       to_port = port.value
       protocol = "tcp"
-      security_groups = [aws_security_group.akrawiec_sg_pub.id]
+      security_groups = [aws_security_group.public_sg.id]
     }
   }
 

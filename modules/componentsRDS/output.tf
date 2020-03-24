@@ -1,4 +1,4 @@
 output "rds_instance_endpoints" {
-  description = "A list of all cluster instance endpoints"
-  value       = [aws_db_instance.akrawiec_RDS_master.*.endpoint, aws_db_instance.akrawiec_RDS_replica.*.endpoint]
+  description = "A list of RDS instances endpoints"
+  value       = [aws_db_instance.rds_server.*.endpoint, aws_db_instance.rds_server_replica.*.endpoint]
 }

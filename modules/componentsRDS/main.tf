@@ -3,7 +3,7 @@
 # Crate Instance DB Server  (10min) default RT, NACL
 # RDS with access from EC2(SecGroup) -> RDS allowed
 # -----------------------------------------
-resource "aws_db_instance" "akrawiec_RDS_master" {
+resource "aws_db_instance" "rds_server" {
   count = var.createInstance ? 1 : 0
 
   db_subnet_group_name = var.rds_subnet_group_id
@@ -35,15 +35,17 @@ resource "aws_db_instance" "akrawiec_RDS_master" {
 # -------------- RDS ----------- -----------
 # Crate DB read replica  (10min)
 # -----------------------------------------
-resource "aws_db_instance" "akrawiec_RDS_replica" {
+resource "aws_db_instance" "rds_server_replica" {
   count = var.createReplica ? 1 : 0
 
-  //https://github.com/terraform-providers/terraform-provider-aws/issues/528
   //create
-  //replicate_source_db  = aws_db_instance.akrawiec_RDS_master[count.index].arn
+  replicate_source_db  = aws_db_instance.rds_server[count.index].arn
+  
   //modify
-  replicate_source_db  = aws_db_instance.akrawiec_RDS_master[count.index].identifier
-  db_subnet_group_name = var.rds_subnet_group_id
+  //replicate_source_db  = aws_db_instance.rds_server[count.index].identifier
+  
+  //not needed if the same region
+  //db_subnet_group_name = var.rds_subnet_group_id
   vpc_security_group_ids = var.rds_security_group_ids
   
   identifier              = "${var.instance_name}-replica"

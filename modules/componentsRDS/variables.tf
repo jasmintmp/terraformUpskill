@@ -20,14 +20,11 @@ variable "rds_security_group_ids" {
 
 # predefinied
 variable "instance_name" {
-   description = "List of security groups master and replica"
-   default = "akrawiec-myssql-instance"  
+   default = "server-myssql-instance"  
 }
-
 variable "storage_type" {
     default = "gp2"
 }
-
 variable "allocated_storage" {
     default = 20
 }

@@ -6,6 +6,3 @@
 # or automaticly loaded if named terraform.tfvars
 #---------------------------------------------
 
-nr_Ec2_instances  = 2
-region = "us-west-2"
-

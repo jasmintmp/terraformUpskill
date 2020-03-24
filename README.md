@@ -26,7 +26,7 @@ VPC with Internet Access with
     Internet connection
  - $curl http://google.com HTTP:80
    DB connection
- - $telnet akrawiec-myssql-replica.cveqos66v3sg.us-west-2.rds.amazonaws.com 3306
+ - $telnet enpoint-myssql-replica.cveqos66v3sg.us-west-2.rds.amazonaws.com 3306
   
 # Issue diagnostic / option    
     - AWS logs from VPC vpcflowlogs

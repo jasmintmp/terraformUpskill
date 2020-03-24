@@ -1,12 +1,13 @@
-#------------- variables ----------------- 
-# Passed from .tfvars - the same name ----
-#-----------------------------------------
+#------------- variables -------------------- 
+# Can be set in .tfvars - the same name
+#--------------------------------------------
 variable "environment" {
   default = "dev"
 }
 variable "owner" {
   default = "akrawiec"
 }
+
 #network module
 variable "availability_zone_names" {
   description = "List of AZ,  determines EC2 instances"

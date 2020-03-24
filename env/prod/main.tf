@@ -1,113 +1,54 @@
-#  ROOT 
+#  ROOT
 #   ├── modules
-#   │   └── network
-#   │     └── main.tf
-#   │   └── components
-#   │     └── main.tf
-#   │
-#   ├── environments
+#   │   └── network, variables.tf, outputs.tf   
+#   │   └── componentsEC2, variables.tf, outputs.tf
+#   │   └── componentsRDS, variables.tf, outputs.tf
+#   ├── env
 #       ├── dev  
-#       │ └── main.tf
-#       │ └── variables.tf
+#       │ └── main.tf, variables.tf, outputs.tf
 #       ├── prod
-#       │ └── main.tf
-#       │ └── variables.tf
-#       └── staging
-#         └── main.tf
-#         └── variables.tf
+#         └── main.tf, variables.tf, outputs.tf
 
-# to the file add ex cid etc..
-variable "region" {
-  
-}
-
-#------------- variables from tfvars ----
-variable "serv_count" {
-  description   = "A numerical var"
-  default = 1
-}
-
-# ---------- Provider ----------
-# Getting Started
-# This is introduction script for terraform with basic commands.
-# ------------------------------
-provider "aws" {
-  profile = "default"
-  region  = var.region
-}
-
-
-
-#----------- Backend Configuration --------------
-# First S3 must be created from panel, 
-# Configuration is moved to remote state [init];  destroy:  remove .terraform/ 
-# The Terraform state is written to the key
-# It's used to read state from one place - hence script can be run undependetly from different localizations.
-#---------------------------------------------------
-
-terraform {
-  backend "s3" {
-    bucket = "akrawiec-terraform-state"
-    key    = "backend/key"
-    region  = "us-west-2"
-  }
-}
-
-
-
-#------------- Modules ----------
+#------------- Modules -------------------------
+# Create: two public subnets in differend AZ
+# with Internet GT, SG, RT that can access RDS
+# Two private subnet RDS in differend AZ 
+#----------------------------------------------
 module "network" {
   source = "./../../modules/network"
+  environment = var.environment
+  owner = var.owner
+
+  vpc_cidr = var.vpc_cidr
+  pub_subnet_count = length(var.availability_zone_names)
+  prv_subnet_count = var.rds_amount
+  availability_zone_names = var.availability_zone_names
 }
 
-module "components" {
-  source = "./../../modules/components"
-  subnetId = module.network.subnetId
+#--------------------------------
+# Create: two EC2
+#--------------------------------
+module "componentsEC2" {
+  source = "./../../modules/componentsEC2"
+  environment = var.environment
+  owner = var.owner
+
+  ec2_count = length(var.availability_zone_names)
+  //ec2_count = 0
+  ec2_subnet_ids = module.network.ec2_subnet_ids
+  ec2_security_group_id = module.network.ec2_sg_id
 }
 
+#--------------------------------
+# Create: two RDS 
+#--------------------------------
+module "componentsRDS" {
+  source = "./../../modules/componentsRDS"
+  environment = var.environment
+  owner = var.owner
 
-# ---------- S3 for test upload --------------
-# New resource for the S3 bucket our application will use.
-# NOTE: S3 bucket names must be unique across _all_ AWS accounts  
-# "my_bucket": local name can be refered from elsewhere in the same module.
-# ---------- 
-
-resource "aws_s3_bucket" "my_bucket" {  
-  region  = var.region
-  bucket = "akrawiec-terraform-upload"
-  acl    = "private"
-  force_destroy = true
-  
+  createInstance = var.create_rds_instance
+  createReplica = var.create_rds_replica
+  rds_subnet_group_id = module.network.rds_subnet_group_id
+  rds_security_group_ids = module.network.rds_security_group_ids
 }
-
-#------------ File upload to S3 --------------
-#-- after my_bucket.id has created - referer to .id
-# resource "aws_s3_bucket_object" "file_upload" {
-#   bucket = aws_s3_bucket.my_bucket.id
-#   key    = "my_files.zip"
-#   source = "${path.module}/my_files.zip"
-#   etag   = filemd5("${path.module}/my_files.zip")
-# }
-
-
-
-
-	
-#--------- DataSource ------------------------
-#  Data from:  provider, HTTP url, ...  , filters
-#---------------------------------------------
-
-data "aws_vpcs" "vpc_list" {
-}
-
-output "vpc_list" {
-  value = "${data.aws_vpcs.vpc_list.ids}"
-}
-
-
-
-
-
-
-
-
