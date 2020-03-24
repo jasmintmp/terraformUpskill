@@ -1,8 +1,6 @@
 #------------- variables -------------------- 
 # Can be set in .tfvars - the same name
 #--------------------------------------------
-#NOT TESTED
-# environment , vpc_cidr
 variable "environment" {
   default = "prod"
 }
@@ -19,14 +17,10 @@ variable "vpc_cidr" {
   default = "20.0.0.0/16"
 }
 
-#rds module
+#rds module, to tourn off set 2xfalse
 variable "create_rds_instance" {
-  default = true
+  default = false
 }
 variable "create_rds_replica" {
-  default = true
-}
-variable "rds_amount" {
-  description = "set 2 for master & replica"
-  default = 2
+  default = false
 }

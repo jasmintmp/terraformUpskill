@@ -15,7 +15,7 @@ provider "aws" {
 #---------------------------------------------------
 terraform {
   backend "s3" {
-    bucket = "akrawiec-terraform-state"
+    bucket = "akrawiec-terraform-state-prod"
     key    = "backend/key"
     region  = "us-west-2"
   }
