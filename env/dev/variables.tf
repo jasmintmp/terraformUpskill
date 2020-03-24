@@ -17,14 +17,10 @@ variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
 
-#rds module
+#rds module, to tourn off set 2xfalse
 variable "create_rds_instance" {
-  default = true
+  default = false
 }
 variable "create_rds_replica" {
-  default = true
-}
-variable "rds_amount" {
-  description = "set 2 for master & replica"
-  default = 2
+  default = false
 }

@@ -22,12 +22,12 @@ resource "aws_vpc" "this" {
 # EC2 - preparation, public Internet access 
 # --------------------------------------------------------------------------------------------
 # -------------- Subnet ----------------------
-#  Add public subnets - unique CIDR/VPC/AZ cidrsubnet()
+#  Add public subnets - unique CIDR/VPC/AZ cidrsubnet() 
+#  10.0.1.0/24, 10.0.2.0/24
 #---------------------------------------------
 resource "aws_subnet" "public"{
   count = var.pub_subnet_count
   vpc_id     = aws_vpc.this.id
-  //cidr_block = "10.0.2${count.index}.0/24"
   cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 8, count.index+1)
 
   availability_zone = var.availability_zone_names[count.index]
@@ -47,7 +47,6 @@ resource "aws_subnet" "public"{
 # Default SG allows traffic
 # -----------------------------------------
 resource "aws_security_group" "public_sg"{
-  #name = "akrawiec_sg_pub"
   description = "Allow SSH"
   vpc_id = aws_vpc.this.id
 
@@ -172,19 +171,7 @@ resource "aws_route" "vpc_internet_access" {
   gateway_id             = aws_internet_gateway.this.id
 } 
 
-# # 4.1 Associate the Route Table with the Subnet1
-# resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub1" {
-#   subnet_id      = aws_subnet.public[0].id
-#   route_table_id = aws_route_table.vpc_route_table.id
-# } 
-
-# # 4.2 Associate the Route Table with the Subnet2
-# resource "aws_route_table_association" "akrawiec_VPC_rt_with_sub2" {
-#   subnet_id      = aws_subnet.public[1].id
-#   route_table_id = aws_route_table.vpc_route_table.id
-# }
-
-# 4.1 Associate the Route Table with the public Subnets
+# 4 Associate the Route Table with the public Subnets
 resource "aws_route_table_association" "vpc_rt_with_subnets" {
   count = length(aws_subnet.public.*.id)
   subnet_id      = aws_subnet.public[count.index].id
@@ -215,7 +202,6 @@ resource "aws_subnet" "subnet_prv" {
 # 2 Crate DB private Subnets Group
 # -----------------------------------------
 resource "aws_db_subnet_group" "this" {
-  #name       = "akrawiec_subnets_group"
   subnet_ids = aws_subnet.subnet_prv.*.id
 
   tags = {
@@ -227,12 +213,11 @@ resource "aws_db_subnet_group" "this" {
 }
 
 # -------------- RDS Security Group -----------
-# 3.1 Crate master/replica Security Groups block
+# 3.1 Crate master/replica SG, for each rds subnet
 # RDS with Source EC2(SecGroup) -> RDS allowed
 # -----------------------------------------
 resource "aws_security_group" "this"{
   count = var.prv_subnet_count
-  #name = "akrawiec_sg_prv_${count.index}"
   description = "Allow EC2 access to RDS"
   vpc_id = aws_vpc.this.id
 

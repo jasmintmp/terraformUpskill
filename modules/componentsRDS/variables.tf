@@ -5,10 +5,10 @@ variable "owner" {
 }
 
 # Infra
-variable "createInstance" {
+variable "create_instance" {
   type = bool
 }
-variable "createReplica" {
+variable "create_replica" {
   type = bool
 }
 variable "rds_subnet_group_id" {

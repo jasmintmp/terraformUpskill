@@ -22,6 +22,8 @@ variable "pub_subnet_count" {
   type = number
 }
 variable "prv_subnet_count" {
+  description = "set 2 for master & replica"
+  default = 2
 }
 variable "availability_zone_names" {
   type = list(string)

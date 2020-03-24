@@ -4,7 +4,7 @@
 # RDS with access from EC2(SecGroup) -> RDS allowed
 # -----------------------------------------
 resource "aws_db_instance" "rds_server" {
-  count = var.createInstance ? 1 : 0
+  count = var.create_instance ? 1 : 0
 
   db_subnet_group_name = var.rds_subnet_group_id
   vpc_security_group_ids = var.rds_security_group_ids
@@ -36,13 +36,14 @@ resource "aws_db_instance" "rds_server" {
 # Crate DB read replica  (10min)
 # -----------------------------------------
 resource "aws_db_instance" "rds_server_replica" {
-  count = var.createReplica ? 1 : 0
+  count = var.create_replica ? 1 : 0
 
-  //create
-  replicate_source_db  = aws_db_instance.rds_server[count.index].arn
+  //for create
+  //replicate_source_db  = aws_db_instance.rds_server[count.index].arn
   
-  //modify
-  //replicate_source_db  = aws_db_instance.rds_server[count.index].identifier
+  //for modify
+  //Error: cannot elect new source database for replication
+  replicate_source_db  = aws_db_instance.rds_server[count.index].identifier
   
   //not needed if the same region
   //db_subnet_group_name = var.rds_subnet_group_id
