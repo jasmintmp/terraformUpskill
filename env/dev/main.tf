@@ -20,6 +20,7 @@ module "network" {
   pub_subnet_count = length(var.availability_zone_names)
   prv_subnet_count = var.rds_amount
   availability_zone_names = var.availability_zone_names
+  environment = var.environment
 }
 
 #--------------------------------

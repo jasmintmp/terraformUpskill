@@ -1,26 +1,4 @@
 # MODULE network
-variable "vpc_cidr" {
-}
-variable "pub_subnet_count" {
-  type = number
-}
-variable "prv_subnet_count" {
-}
-variable "availability_zone_names" {
-  type = list(string)
-}
-variable "ingress_pub_ports" {
-  type        = list(number)
-  description = "list of ingress EC2 access ports"
-  default     = [22, 80, 443]
-}
-variable "ingress_prv_ports" {
-  type        = list(number)
-  description = "list of ingress RDS access ports"
-  default     = [22, 3306]
-}
-
-
 locals{
   zero-address = "0.0.0.0/0"
 }
@@ -37,6 +15,7 @@ resource "aws_vpc" "akrawiec_vpc" {
     Name = "akrawiec_vpc"
     Owner = "akrawiec"
     Terraform = "true"
+    Environment = var.environment
   }
 }
 # --------------------------------------------------------------------------------------------
@@ -58,12 +37,14 @@ resource "aws_subnet" "akrawiec_subnet_pub"{
     Name = "akrawiec_subnet_pub_${count.index}"
     Owner = "akrawiec"
     Terraform = "true"
+    Environment = var.environment
   }
 }
 
 # -------------- Security Group -----------
 # Add Public Security Group - instance firewall 
 # Statefull - no need return trip
+# Default SG allows traffic
 # -----------------------------------------
 resource "aws_security_group" "akrawiec_sg_pub"{
   name = "akrawiec_sg_pub"
@@ -81,34 +62,18 @@ resource "aws_security_group" "akrawiec_sg_pub"{
     }
   }
   
-  # # allow egress of all ports
-  # egress {
-  #   from_port   = 0
-  #   to_port     = 0
-  #   protocol    = "-1"
-  #   cidr_blocks = [local.zero-address]
-  # }
-
  tags = {
     Owner ="akrawiec"
     Terraform = "true"
+    Environment = var.environment
   }
 }
 
-
 # -------------- NACL ----------------------
-# Add NACL - subnet firewall   Access Controll List
+# Add NACL - subnet firewall  Access Controll List
+# Default NACL allows traffic
 # -----------------------------------------
-variable "ingress_ports_nacl" {
-  description = "map of ingress nacl ports"
-  default     = {
-      "100" = 22
-      "200" = 80
-      "400" = 443
-      }
-}
 resource "aws_network_acl" "akrawiec_vpc_nacl" {
-  
   vpc_id = aws_vpc.akrawiec_vpc.id
   subnet_ids = aws_subnet.akrawiec_subnet_pub.*.id
 
@@ -160,11 +125,13 @@ resource "aws_network_acl" "akrawiec_vpc_nacl" {
     Name = "akrawiec_vpc_nacl"
     Terraform = "true"
     Onwer = "akrawiec"
+    Environment = var.environment
   }
 }
 
 # --------------------------------------------------------------
-#  Create the Internet Access, IGW, RT, Routes, Associations
+#  Create the Internet Access, IGW, RT, Routes, Associations 
+#  Remember to allow access NACL(with ephemeral), SecGroups
 # --------------------------------------------------------------
 # 1 Add Internet Gateway  
 resource "aws_internet_gateway" "akrawiec_vpc_gw" {
@@ -173,6 +140,7 @@ resource "aws_internet_gateway" "akrawiec_vpc_gw" {
   tags = {
     Name = "akrawiec_vpc_gw"
     Terraform = "true"
+    Environment = var.environment
   }
 }
 
@@ -190,6 +158,7 @@ resource "aws_route_table" "akrawiec_VPC_route_table" {
   tags = {
     Name = "akrawiec_VPC_route_table"
     Terraform = "true"
+    Environment = var.environment
   }
 }
 
@@ -228,6 +197,7 @@ resource "aws_subnet" "akrawiec_subnet_prv" {
     Name = "akrawiec_subnet_prv_${count.index}"
     Terraform = true
     Owner = "akrawiec"
+    Environment = var.environment
   }
 }
 
@@ -242,6 +212,7 @@ resource "aws_db_subnet_group" "akrawiec_subnets_group" {
     Name = "akrawiec DB subnet group"
     Terraform = true
     Owner = "akrawiec"
+    Environment = var.environment
   }
 }
 
@@ -265,29 +236,10 @@ resource "aws_security_group" "akrawiec_sg_prv"{
       security_groups = [aws_security_group.akrawiec_sg_pub.id]
     }
   }
-}
 
- 
-
-  #  tags {
-  #       Name = "DBServerSG"
-  #       Terraform = true
-  #   }
-
-#}
-
-#---------- OutPut  -----------
-# 
-#-------------------------------
-output "ec2_subnet_ids" {
-  value = aws_subnet.akrawiec_subnet_pub.*.id
-}
-output "ec2_sg_id" {
-  value = aws_security_group.akrawiec_sg_pub.id
-}
-output "rds_subnet_group_id" {
-  value = aws_db_subnet_group.akrawiec_subnets_group.id
-}
-output "rds_security_group_ids" {
-  value = aws_security_group.akrawiec_sg_prv.*.id
+  tags = {
+    Name = "RDS private Security Group"
+    Terraform = true
+    Environment = var.environment
+  }
 }

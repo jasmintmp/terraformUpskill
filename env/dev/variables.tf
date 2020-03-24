@@ -1,6 +1,10 @@
 #------------- variables ----------------- 
 # Passed from .tfvars - the same name ----
 #-----------------------------------------
+variable "environment" {
+  default = "dev"
+}
+#network module
 variable "availability_zone_names" {
   description = "List of AZ,  determines EC2 instances"
   default = ["us-west-2a","us-west-2c"]
@@ -8,6 +12,8 @@ variable "availability_zone_names" {
 variable "vpc_cidr" {
   default = "10.0.0.0/16"
 }
+
+#rds module
 variable "create_rds_instance" {
   default = true
 }
