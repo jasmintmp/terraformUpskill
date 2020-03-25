@@ -32,7 +32,7 @@ module "componentsEC2" {
   environment = var.environment
   owner = var.owner
 
-  # ec2_count = length(var.availability_zone_names)
+  ec2_count = length(var.availability_zone_names)
   ec2_subnet_ids = module.network.ec2_subnet_ids
   ec2_security_group_id = module.network.ec2_sg_id
 }

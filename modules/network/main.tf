@@ -14,7 +14,7 @@ resource "aws_vpc" "this" {
   tags = {
     Name = "${var.owner}-vpc"
     Owner = var.owner
-    Terraform = "true"
+    Terraform = true
     Environment = var.environment
   }
 }
@@ -36,7 +36,7 @@ resource "aws_subnet" "public"{
   tags = {
     Name = "${var.owner}-${var.pub_subnet_name}-${count.index}"
     Owner = var.owner
-    Terraform = "true"
+    Terraform = true
     Environment = var.environment
   }
 }
@@ -64,7 +64,7 @@ resource "aws_security_group" "public_sg"{
  tags = {
     Owner = var.owner
     Name = "${var.owner}-${var.pub_sg_name}"
-    Terraform = "true"
+    Terraform = true
     Environment = var.environment
   }
 }
@@ -123,7 +123,7 @@ resource "aws_network_acl" "public_vpc_nacl" {
 
   tags = {
     Name = "${var.owner}-nacl"
-    Terraform = "true"
+    Terraform = true
     Onwer = var.owner
     Environment = var.environment
   }
@@ -139,7 +139,7 @@ resource "aws_internet_gateway" "this" {
 #TODO associate subnet with Gateway
   tags = {
     Name = "${var.owner}-vpc-gw"
-    Terraform = "true"
+    Terraform = true
     Onwer = var.owner
     Environment = var.environment
   }
@@ -158,7 +158,7 @@ resource "aws_route_table" "vpc_route_table" {
   
   tags = {
     Name = "${var.owner}-vpc-route-table"
-    Terraform = "true"
+    Terraform = true
     Onwer = var.owner
     Environment = var.environment
   }
@@ -194,7 +194,7 @@ resource "aws_subnet" "subnet_prv" {
 
   tags = {
     Name = "${var.owner}-${var.prv_subnet_name}-${count.index}"
-    Terraform = "true"
+    Terraform = true
     Owner = var.owner
     Environment = var.environment
   }
@@ -208,7 +208,7 @@ resource "aws_db_subnet_group" "this" {
 
   tags = {
     Name = "${var.owner}-${var.prv_subnet_name}-group"
-    Terraform = "true"
+    Terraform = true
     Owner = var.owner
     Environment = var.environment
   }
@@ -236,7 +236,7 @@ resource "aws_security_group" "this"{
 
   tags = {
     Name = "${var.owner}-${var.prv_sg_name}"
-    Terraform = "true"
+    Terraform = true
     Environment = var.environment
   }
 }

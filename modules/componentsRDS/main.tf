@@ -26,7 +26,7 @@ resource "aws_db_instance" "rds_server" {
 
   tags = {
   Name = "${var.owner}-rds-instance"
-  Terraform = "true"
+  Terraform = true
   Onwer = var.owner
   Environment = var.environment
   }
@@ -64,7 +64,7 @@ resource "aws_db_instance" "rds_server_replica" {
 
   tags = {
   Name = "${var.owner}-rds-instance-replica"
-  Terraform = "true"
+  Terraform = true
   Onwer = var.owner
   Environment = var.environment
   }
