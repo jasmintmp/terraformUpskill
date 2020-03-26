@@ -9,7 +9,7 @@ resource "aws_db_instance" "rds_server" {
   db_subnet_group_name = var.rds_subnet_group_id
   vpc_security_group_ids = var.rds_security_group_ids
 
-  identifier              = var.instance_name
+  identifier              = "${var.instance_name}-${var.environment}"
   username                = var.username
   password                = var.password
 
@@ -49,7 +49,7 @@ resource "aws_db_instance" "rds_server_replica" {
   //db_subnet_group_name = var.rds_subnet_group_id
   vpc_security_group_ids = var.rds_security_group_ids
   
-  identifier              = "${var.instance_name}-replica"
+  identifier              = "${var.instance_name}-${var.environment}-replica"
   username                = ""
   password                = ""
   allocated_storage       = var.allocated_storage
