@@ -3,12 +3,8 @@ variable "environment" {
 }
 variable "owner" {
 }
-
-# Infra
-# variable "ec2_count" {
-#    description = "Number of EC2 instances"
-#    type = number
-# }
+variable "aws_ssh_key_name"{   
+}
 variable "ec2_subnet_ids" {
    description = "Ordered list of subnets for each EC2"
 }

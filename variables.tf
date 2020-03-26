@@ -2,25 +2,36 @@
 # Can be set in .tfvars - the same name
 #--------------------------------------------
 variable "environment" {
-  default = "dev"
 }
 variable "owner" {
-  default = "akrawiec"
 }
-
-#network module
-variable "availability_zone_names" {
-  description = "List of AZ,  determines EC2 instances"
-  default = ["us-west-2a","us-west-2c"]
+variable "region" {
 }
 variable "vpc_cidr" {
-  default = "10.0.0.0/16"
+}
+#network module
+variable "az_names" {
+  description = "List of AZ,  determines EC2 instances"
+}
+variable "ec2_ami" {
+}
+variable "ec2_type" {
+   default = "t2.micro"
+}
+
+variable "public_key_name" {
 }
 
 #rds module, to tourn off set 2xfalse
 variable "create_rds_instance" {
-  default = false
+  default = true
 }
 variable "create_rds_replica" {
-  default = false
+  default = true
+}
+variable "username" {
+}
+variable "password" {
+}
+variable "allocated_storage" {
 }

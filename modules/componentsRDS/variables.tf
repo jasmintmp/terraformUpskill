@@ -17,16 +17,18 @@ variable "rds_subnet_group_id" {
 variable "rds_security_group_ids" {
    description = "List of security groups master and replica"
 }
-
+variable "allocated_storage" {
+}
+variable "username" {
+}
+variable "password" {
+}
 # predefinied
 variable "instance_name" {
    default = "server-myssql-instance"  
 }
 variable "storage_type" {
     default = "gp2"
-}
-variable "allocated_storage" {
-    default = 20
 }
 variable "engine" {
     default = "mysql"
@@ -36,12 +38,6 @@ variable "engine_version" {
 }
 variable "instance_class" {
     default = "db.t2.micro"
-}
-variable "username" {
-    default = "admin"
-}
-variable "password" {
-    default = "password"
 }
 variable "port" {
     default = "3306"
@@ -58,5 +54,3 @@ variable "skip_final_snapshot" {
 variable "apply_immediately" {
     default = true
 }
-
-

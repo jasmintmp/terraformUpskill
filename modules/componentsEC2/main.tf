@@ -1,15 +1,15 @@
 # MODULE componentsEC2 
 # ---------- EC2 	---------------------
 # Virtual Servers in Autoscaling Group
-# based on launc_configuration
+# based on launch_configuration, can't change-immutable
 # -------------------------------------
 # Launch Configuration EC2 parameters
 resource "aws_launch_configuration" "this" {
-  name          = "${var.owner}-launch-config"
-  image_id      = var.ec2_ami
-  instance_type = var.ec2_type
-  security_groups      = [var.ec2_security_group_id]
-  key_name             = aws_key_pair.this.key_name
+  name_prefix     = "${var.owner}-launch-config"
+  image_id        = var.ec2_ami
+  instance_type   = var.ec2_type
+  security_groups = [var.ec2_security_group_id]
+  key_name        = var.aws_ssh_key_name
 
   lifecycle {
     create_before_destroy = true
@@ -17,7 +17,7 @@ resource "aws_launch_configuration" "this" {
 }
 # Autoscaling Group
 resource "aws_autoscaling_group" "this" {
-  name                 = "${var.owner}-auto-s-group"
+  name_prefix           = "${var.owner}-auto-sg"
   launch_configuration = aws_launch_configuration.this.name
   vpc_zone_identifier  = var.ec2_subnet_ids 
   
@@ -36,7 +36,7 @@ resource "aws_autoscaling_group" "this" {
    tags = [
      {
       "key" = "Name"
-      "value" = "${var.owner}-ec2-temp"
+      "value" = "${var.owner}-ag"
       "propagate_at_launch" = true
      },
 
@@ -48,6 +48,11 @@ resource "aws_autoscaling_group" "this" {
   {
     "key" = "Terraform"
     "value" = "true"
+    "propagate_at_launch" = true
+  },
+  {
+    "key" = "Environment"
+    "value" = var.environment
     "propagate_at_launch" = true
   },
    ]

@@ -30,7 +30,7 @@ resource "aws_subnet" "public"{
   vpc_id     = aws_vpc.this.id
   cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 8, count.index+1)
 
-  availability_zone = var.availability_zone_names[count.index]
+  availability_zone = var.az_names[count.index]
   map_public_ip_on_launch = true
 
   tags = {
@@ -190,7 +190,7 @@ resource "aws_subnet" "subnet_prv" {
   vpc_id     = aws_vpc.this.id  
   
   cidr_block = cidrsubnet(aws_vpc.this.cidr_block, 8, count.index+1+var.pub_subnet_count)
-  availability_zone = var.availability_zone_names[count.index]
+  availability_zone = var.az_names[count.index]
 
   tags = {
     Name = "${var.owner}-${var.prv_subnet_name}-${count.index}"

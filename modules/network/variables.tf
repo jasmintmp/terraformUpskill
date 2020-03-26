@@ -25,7 +25,7 @@ variable "prv_subnet_count" {
   description = "set 2 for master & replica"
   default = 2
 }
-variable "availability_zone_names" {
+variable "az_names" {
   type = list(string)
 }
 variable "ingress_pub_ports" {
