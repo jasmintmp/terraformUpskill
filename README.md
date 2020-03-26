@@ -1,5 +1,5 @@
 # TerraformUpskill
-PGS upskill program
+Upskill  
 Assumption
 https://github.com/jasmintmp/terraformUpskill/blob/master/aws_infrastructure.jpg
 
@@ -52,13 +52,16 @@ VPC with Internet Access with
 	$terraform destroy -var-file=config/${env}.tfvars
 	```	
 # Tests
-  SSH authentication with RSA Public Key on AWS
-  Putty connection to EC2 Linux Ubuntu:
-    Internet connection
+  SSH authentication with Public Key on AWS with EC2
+  Putty connection to EC2 Linux Ubuntu:  
+  Internet connection
+  ```
  - $curl http://google.com HTTP:80
-   DB connection
+  ```
+  DB connection
+  ```
  - $telnet enpoint-myssql-replica.cveqos66v3sg.us-west-2.rds.amazonaws.com 3306
-  
+  ```
 # Issue diagnostic / option    
     - AWS logs from VPC vpcflowlogs
     - Linux EC2 var/log/cloud-init.log
