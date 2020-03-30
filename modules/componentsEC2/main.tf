@@ -3,6 +3,7 @@ locals {
   standard_tags = {
     Name      = "${var.owner}-ag"
     Owner     = var.owner
+    Environment = var.environment
     Terraform = true
   }
 }
@@ -33,10 +34,6 @@ resource "aws_autoscaling_group" "this" {
   min_size             = var.min_size
   max_size             = var.max_size
  
-  # health_check_grace_period = 300
-  # health_check_type         = "ELB"
-  # force_delete              = true
-
   lifecycle {
     create_before_destroy = true
   }
@@ -49,40 +46,4 @@ resource "aws_autoscaling_group" "this" {
       propagate_at_launch = true
     }
   }
-# //2
-#   tag{
-#     key = "Owner"
-#     value = "Ada"
-#     propagate_at_launch = true
-#   }
-#   tag{
-#     key = "Name"
-#     value = "ASG"
-#     propagate_at_launch = true
-#   }
-
-  //1
-  # tags = [
-  #   {
-  #   "key" = "Name"
-  #   "value" = "${var.owner}-ag"
-  #   "propagate_at_launch" = true
-  # },
-
-  #   {
-  #   "key" = "Owner"
-  #   "value" = var.owner
-  #   "propagate_at_launch" = true
-  # },
-  # {
-  #   "key" = "Terraform"
-  #   "value" = "true"
-  #   "propagate_at_launch" = true
-  # },
-  # {
-  #   "key" = "Environment"
-  #   "value" = var.environment
-  #   "propagate_at_launch" = true
-  # },
-  #  ]
 }
