@@ -6,6 +6,10 @@ data "aws_instances" "test" {
     depends_on = [aws_autoscaling_group.this]
 }
 
-output "ec2_public_ips" {
+output "public_ips" {
   value = data.aws_instances.test.public_ips
 }
+output "autoscaling_group_name" {
+  value = aws_autoscaling_group.this.name
+}
+

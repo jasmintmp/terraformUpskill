@@ -50,8 +50,8 @@ resource "aws_db_instance" "rds_server_replica" {
   vpc_security_group_ids = var.rds_security_group_ids
   
   identifier              = "${var.instance_name}-${var.environment}-replica"
-  username                = ""
-  password                = ""
+  username                = var.replica_username
+  password                = var.replica_password
   allocated_storage       = var.allocated_storage
   storage_type            = var.storage_type
   engine                  = var.engine

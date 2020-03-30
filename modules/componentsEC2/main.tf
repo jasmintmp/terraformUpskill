@@ -1,4 +1,11 @@
 # MODULE componentsEC2 
+locals {
+  standard_tags = {
+    Name      = "${var.owner}-ag"
+    Owner     = var.owner
+    Terraform = true
+  }
+}
 # ---------- EC2 	---------------------
 # Virtual Servers in Autoscaling Group
 # based on launch_configuration, can't change-immutable
@@ -6,87 +13,76 @@
 # Launch Configuration EC2 parameters
 resource "aws_launch_configuration" "this" {
   name_prefix     = "${var.owner}-launch-config"
-  image_id        = var.ec2_ami
-  instance_type   = var.ec2_type
-  security_groups = [var.ec2_security_group_id]
+  image_id        = var.ami
+  instance_type   = var.type
+  security_groups = [var.security_group_id]
   key_name        = var.aws_ssh_key_name
 
   lifecycle {
     create_before_destroy = true
   }
 }
+
 # Autoscaling Group
 resource "aws_autoscaling_group" "this" {
   name_prefix           = "${var.owner}-auto-sg"
   launch_configuration = aws_launch_configuration.this.name
-  vpc_zone_identifier  = var.ec2_subnet_ids 
+  vpc_zone_identifier  = var.subnet_ids 
   
-  desired_capacity     = 2
-  min_size             = 1
-  max_size             = 3
+  desired_capacity     = var.desired_capacity
+  min_size             = var.min_size
+  max_size             = var.max_size
  
-  health_check_grace_period = 300
-  health_check_type         = "ELB"
-  force_delete              = true
+  # health_check_grace_period = 300
+  # health_check_type         = "ELB"
+  # force_delete              = true
 
   lifecycle {
     create_before_destroy = true
   }
 
-   tags = [
-     {
-      "key" = "Name"
-      "value" = "${var.owner}-ag"
-      "propagate_at_launch" = true
-     },
-
-    {
-    "key" = "Owner"
-    "value" = var.owner
-    "propagate_at_launch" = true
-  },
-  {
-    "key" = "Terraform"
-    "value" = "true"
-    "propagate_at_launch" = true
-  },
-  {
-    "key" = "Environment"
-    "value" = var.environment
-    "propagate_at_launch" = true
-  },
-   ]
-}
-# Schedule 1 - decrease all to ec2 to 1, every 10 min 
-resource "aws_autoscaling_schedule" "decrease" {
-  scheduled_action_name  = "decrease"
-  desired_capacity       = 1
-  min_size               = 1
-  max_size               = 1
-  start_time             = timeadd(timestamp(), "1h")
-  end_time               = "2020-12-12T06:00:00Z"
-  recurrence ="* */10 * * *"
-  autoscaling_group_name = aws_autoscaling_group.this.name
-
-   lifecycle {
-    create_before_destroy = true
+  dynamic "tag" {
+    for_each = local.standard_tags
+    content{
+      key   = tag.key
+      value = tag.value
+      propagate_at_launch = true
+    }
   }
-}
+# //2
+#   tag{
+#     key = "Owner"
+#     value = "Ada"
+#     propagate_at_launch = true
+#   }
+#   tag{
+#     key = "Name"
+#     value = "ASG"
+#     propagate_at_launch = true
+#   }
 
-# Schedule 2 - increase all to ec2 to 2, every 10 min (started 5 min later) 
-resource "aws_autoscaling_schedule" "increase" {
-  scheduled_action_name  = "increase"
-  desired_capacity       = 3
-  min_size               = 3
-  max_size               = 3
-  start_time             = timeadd(timestamp(), "1h5m")
-  end_time               = "2020-12-12T06:00:00Z"
-  recurrence ="* */7 * * *"
-  autoscaling_group_name = aws_autoscaling_group.this.name
+  //1
+  # tags = [
+  #   {
+  #   "key" = "Name"
+  #   "value" = "${var.owner}-ag"
+  #   "propagate_at_launch" = true
+  # },
 
-   lifecycle {
-    create_before_destroy = true
-  }
-
-  depends_on = [aws_autoscaling_schedule.decrease]
+  #   {
+  #   "key" = "Owner"
+  #   "value" = var.owner
+  #   "propagate_at_launch" = true
+  # },
+  # {
+  #   "key" = "Terraform"
+  #   "value" = "true"
+  #   "propagate_at_launch" = true
+  # },
+  # {
+  #   "key" = "Environment"
+  #   "value" = var.environment
+  #   "propagate_at_launch" = true
+  # },
+  #  ]
 }

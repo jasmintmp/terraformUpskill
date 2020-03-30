@@ -23,6 +23,10 @@ variable "username" {
 }
 variable "password" {
 }
+variable "replica_username" {
+}
+variable "replica_password" {
+}
 # predefinied
 variable "instance_name" {
    default = "server-myssql-instance"  

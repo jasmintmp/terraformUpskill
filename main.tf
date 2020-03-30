@@ -3,6 +3,7 @@
 #   │   └── network   
 #   │   └── componentsEC2
 #   │   └── componentsRDS
+#   │   └── autoscalingSchedule
 #   └─ main.tf, .., dev.tfvars, prod.tfvars
 
 #----------- Backend Configuration --------------
@@ -58,11 +59,45 @@ module "componentsEC2" {
   source = ".//modules/componentsEC2"
   environment = var.environment
   owner     = var.owner
-  ec2_ami   = var.ec2_ami
-  ec2_type  = var.ec2_type
-  ec2_subnet_ids = module.network.ec2_subnet_ids
-  ec2_security_group_id = module.network.ec2_sg_id
+  ami   = var.ec2_ami
+  type  = var.ec2_type
+  desired_capacity = var.ec2_desired_capacity
+  min_size  = var.ec2_min_size
+  max_size  = var.ec2_max_size
+
+  subnet_ids = module.network.ec2_subnet_ids
+  security_group_id = module.network.ec2_sg_id
   aws_ssh_key_name = var.public_key_name
+}
+
+#--------------------------------
+# Create two Autoscaling Schedules  
+#--------------------------------
+# Schedule 1 - decrease all to ec2 to 1, every 10 min 
+module "schedule1"{
+  source = ".//modules/autoscalingSchedule"
+  autoscaling_group_name  = module.componentsEC2.autoscaling_group_name
+  scheduled_action_name   = var.sched1_scheduled_action_name
+  desired_capacity        = var.sched1_desired_capacity
+  min_size                = var.sched1_min_size
+  max_size                = var.sched1_max_size
+  start_time              = timeadd(timestamp(), var.sched1_start_time)
+  end_time                = var.sched1_end_time
+  recurrence              = var.sched1_recurrence
+}
+# Schedule 2 - increase all to ec2 to 2, every 10 min (started 5 min later) 
+module "schedule2"{
+  source = ".//modules/autoscalingSchedule"
+  autoscaling_group_name  = module.componentsEC2.autoscaling_group_name
+  scheduled_action_name   = var.sched2_scheduled_action_name
+  desired_capacity        = var.sched2_desired_capacity
+  min_size                = var.sched2_min_size
+  max_size                = var.sched2_max_size
+  start_time              = timeadd(timestamp(), var.sched2_start_time)
+  end_time                = var.sched2_end_time
+  recurrence              = var.sched2_recurrence
+
+//  depends_on = [aws_autoscaling_schedule.decrease]
 }
 
 #--------------------------------
@@ -74,6 +109,9 @@ module "componentsRDS" {
   owner       = var.owner
   username    = var.username
   password    = var.password
+  replica_username = var.replica_username
+  replica_password = var.replica_password
+  
   allocated_storage = var.allocated_storage
 
   create_instance = var.create_rds_instance
