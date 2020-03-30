@@ -34,5 +34,7 @@ sched2_recurrence       =   "* */7 * * *"
 #RDS
 username = "admin"
 password = "password"
+replica_username = "admin"
+replica_password = "password"
 allocated_storage = 20
 public_key_name = "akrawiec-public-key"
