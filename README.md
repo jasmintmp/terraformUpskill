@@ -32,12 +32,13 @@ VPC with Internet Access with
   $terraform init -backend-config=config/backend-${env}.conf -reconfigure
   ```
 # Preconditions
+	Develop:
 	AWS Console
 	- AWS Account
 	- AWS S3 Bucket for Terraform state
 	- AWS Key Pairs to pass SSH key to EC2 
 	SYSTEM: 
-	- configured AWS profile
+	- configured AWS profile, credentials with access to S3 state
 	- installed AWS CLI
 	- installed Terraform CLI
 	- configure Terraform profile (provider)
