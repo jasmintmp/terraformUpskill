@@ -1,10 +1,11 @@
 # TerraformUpskill
 Upskill  
 Assumption
-https://github.com/jasmintmp/terraformUpskill/blob/master/aws_infrastructure.jpg
-
+https://github.com/jasmintmp/terraformUpskill/blob/master/docs/aws_infrastructure.jpg
+Helper:
+https://github.com/jasmintmp/terraformUpskill/blob/master/docs/aws_schema.jpg
 Result
-https://github.com/jasmintmp/terraformUpskill/blob/master/terraform_upskill_console2.jpg
+https://github.com/jasmintmp/terraformUpskill/blob/master/docs/terraform_upskill_console2.jpg
 
 
 # VPC 
